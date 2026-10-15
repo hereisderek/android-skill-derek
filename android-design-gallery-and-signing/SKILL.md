@@ -37,6 +37,14 @@ Every screen must be edge-to-edge (`enableEdgeToEdge()`) and explicitly handle s
   - Use flexible layouts (`Modifier.weight`, `FlowRow`, `BoxWithConstraints`, adaptive `WindowWidthSizeClass`) and avoid fixed pixel/dp widths or single-line text without `maxLines` + `TextOverflow.Ellipsis`.
   - Verify on device across multiple screen sizes, resolutions, densities (`wm size`, `wm density`), and font scales (`font_scale 1.3`) using `$SKILL_ROOT/state-droid-remote-device/scripts/device-ui-audit.sh`.
 
+### 1.3 Motion & Synchronized Animation Discipline
+
+When two distinct UI elements have a synchronized animation (such as sharing the same trigger, e.g. user interaction or gesture):
+- **Continuous, Not Discrete**: Motion must be continuous rather than snapping between discrete states or steps.
+- **Unified Fling**: Fling gestures must use unified kinetic physics across both elements to maintain seamless momentum instead of disconnected or conflicting deceleration curves.
+- **Smoothness**: The animation must remain fluid and smooth.
+- **Precedence**: A direct instruction from the user takes precedence over this idle rule.
+
 ## 2. Shared Component Gallery (Visual Feedback Showcase)
 
 Every Android app must include an in-app **Component Gallery** (accessible via a debug navigation route, developer drawer/menu, or dedicated debug `Activity` like `.debug.ComponentGalleryActivity`):

@@ -445,6 +445,14 @@ val alpha by animateFloatAsState(if (isVisible) 1f else 0f)
 Box(modifier = Modifier.alpha(alpha))  // recomposes every frame
 ```
 
+### Synchronized Multi-Element Animations
+
+When two distinct UI elements have a synchronized animation (such as sharing the same trigger, e.g. user interaction or gesture):
+- **Continuous, Not Discrete**: Motion must be continuous rather than snapping between discrete steps or states.
+- **Unified Fling**: Fling gestures must be unified across both elements to maintain seamless kinetic continuity instead of disjointed, independent deceleration curves.
+- **Smooth Execution**: The animation must remain smooth, cohesive, and free of jank.
+- **Precedence**: A direct instruction from the user takes precedence over this idle rule.
+
 ---
 
 ## Effect Handlers
@@ -489,6 +497,7 @@ Icon(
 - [ ] Colors from `MaterialTheme.colorScheme`, not hardcoded
 - [ ] All user-facing strings via `stringResource`
 - [ ] Animations read in `graphicsLayer {}` / `offset {}` lambdas
+- [ ] Synchronized multi-element animations are continuous with unified fling and smooth motion (unless explicitly instructed otherwise by user)
 - [ ] One `@Preview` per distinct state — every UI-affecting `Boolean`/`enum` value, content/data variation, short *and* long text, light *and* dark theme, plus width/`fontScale` previews wherever the layout can reflow — all wrapped in app theme
 - [ ] Set visibility: `private` / `internal` / `public` based on scope
 - [ ] No effect handlers unless truly necessary
