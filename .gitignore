@@ -1,0 +1,30 @@
+# macOS & OS metadata
+.DS_Store
+Thumbs.db
+
+# Production Android signing keys (never commit to Git)
+*.jks
+*.keystore
+!debug.keystore
+*.p12
+*.pfx
+keystore.properties
+
+# Temporary Android device capture artifacts
+*.png
+*.jpg
+*.mp4
+*window_dump*.xml
+*hierarchy*.xml
+*dump_*.xml
+*.logcat
+*.log
+*.hprof
+
+# Script caches & runtime outputs
+__pycache__/
+*.py[cod]
+.venv/
+node_modules/
+tmp/
+.tmp/

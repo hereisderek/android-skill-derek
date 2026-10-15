@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "name": "skills",
+  "owner": "intellectronica",
+  "repo": "agent-skills",
+  "path": "plugins/markdown-converter/skills",
+  "branch": "main",
+  "sha": "253e4ff037ba0dc5ebaa08648aa9af90c9e11ade",
+  "source": "manual"
+}

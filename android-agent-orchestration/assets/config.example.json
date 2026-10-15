@@ -1,0 +1,30 @@
+{
+  "preferred_orchestrator": "orca",
+  "preferred_subagents": ["claude", "antigravity"],
+  "preferred_spec_tool": "openspec",
+  "preferred_memory_tool": "agentmemory",
+  "default_device_serial": "172.16.30.1:5555",
+  "device_lock_dir": "/tmp",
+  "model_routing": {
+    "tier1_architecture": {
+      "agent": "claude",
+      "model": "claude-opus-4-6",
+      "effort": "high"
+    },
+    "tier2_feature": {
+      "agent": "claude",
+      "model": "claude-sonnet-4-6",
+      "effort": "medium"
+    },
+    "tier3_qa_audit": {
+      "agent": "antigravity",
+      "model": "pro",
+      "effort": "high"
+    },
+    "tier4_lightweight": {
+      "agent": "antigravity",
+      "model": "flash",
+      "effort": "low"
+    }
+  }
+}

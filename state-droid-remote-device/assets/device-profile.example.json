@@ -1,0 +1,12 @@
+{
+  "default_device_serial": "172.16.30.1:5555",
+  "connection_type": "wireless-adb",
+  "preferred_device_tool": "adb",
+  "fallback_tools": ["state-droid", "scrcpy", "tailscale"],
+  "device_lock_dir": "/tmp",
+  "capture_defaults": {
+    "screenshot_path": "/tmp/device_screen_verify.png",
+    "hierarchy_path": "/tmp/window_dump.xml",
+    "logcat_error_path": "/tmp/device_error_logcat.txt"
+  }
+}
