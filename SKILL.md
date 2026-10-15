@@ -1,6 +1,6 @@
 ---
 name: android-skill-derek
-description: Router skill for Android and engineering workflows covering (1) Design Language, Shared Component Gallery, Dummy Data & Signing Keys, (2) StageDroid/Physical/Virtual Test Device Pool, Wake/Unlock & Multi-Density/Inset UI Auditing, (3) Multi-Agent Android Orchestration with Rebase Device Testing & Coordinator Triage, (4) Release Tagging (`v*` / `beta_*`) & CI/CD Pipelines, and (5) Document-to-Markdown Conversion (`markitdown`). Auto-detects available tools and persists long-lived preferences and cache in ~/.config/android-skill-derek/.
+description: Router skill for Android and engineering workflows covering (1) Design Language, Shared Component Gallery, Dummy Data & Signing Keys, (2) StageDroid/Physical/Virtual Test Device Pool, Wake/Unlock & Multi-Density/Inset UI Auditing, (3) Multi-Agent Android Orchestration with Rebase Device Testing & Coordinator Triage, (4) Release Tagging (`v*` / `beta_*`) & CI/CD Pipelines, (5) Document-to-Markdown Conversion (`markitdown`), and (6) Philipp Lackner Android & KMP Architecture Skills (Module Structure, MVI Presentation, Navigation Compose, Koin DI, Data Layer, Error Handling, Unit Testing, Reusable Components, PR Quiz). Auto-detects available tools and persists long-lived preferences and cache in ~/.config/android-skill-derek/.
 ---
 
 # Android & Engineering Skill Router (`android-skill-derek`)
@@ -14,6 +14,7 @@ Entry point and router for specialized Android development, device verification,
 - Orchestrating feature-named sub-agents across isolated git worktrees, assigning scarce test devices, testing rebased branches on device, triaging bugs (fix on the spot vs. send back), and cleaning up worktrees after merge
 - Cutting, tagging, or configuring CI/CD for a stable (`v1.2.3`) or beta (`beta_1.2.3`) release with explicit per-tag human approval
 - Converting documents, PDFs, Office files, images, audio, or archives into Markdown via `uvx markitdown`
+- Architecting, implementing, or reviewing Android & Kotlin Multiplatform (KMP) features following Philipp Lackner's conventions: feature-layered module boundaries, MVI presentation (single State, sealed Action, Channel Event, Root/Screen composables, SavedStateHandle), type-safe Compose Navigation, Koin dependency injection, offline-first data layer (Room, Ktor, DTOs, mappers), typed error handling (Result/DataError), unit tests (JUnit 5 + AssertK + Turbine), reusable Compose components, or GitHub PR reviewer quizzes
 
 ## Path & Persistent Cache Resolution
 
@@ -31,6 +32,16 @@ Entry point and router for specialized Android development, device verification,
 | `android-agent-orchestration` | `$SKILL_ROOT/android-agent-orchestration/SKILL.md` | `scripts/detect-env.sh` | Naming sub-agents after features/branches, assigning device leases, running layered validation (interactive UI play-testing + UI tests + unit/API tests), testing rebases on device, fixing simple bugs on the spot vs. sending back to sub-agents, and cleaning up worktrees/agents after merge |
 | `release-cicd` | `$SKILL_ROOT/release-cicd/SKILL.md` | — | Cutting or tagging any release (`v<major>.<minor>.<patch>` stable or `beta_<major>.<minor>.<patch>` beta, requiring explicit per-tag user approval) or configuring/fixing release CI/CD pipelines (build, test, sign, package, release notes, Play Store / GitHub Release publishing) |
 | `markdown-converter` | `$SKILL_ROOT/markdown-converter/SKILL.md` | — | Converting PDF, Word (`.docx`), PowerPoint (`.pptx`), Excel (`.xlsx`), HTML, CSV, images (OCR), audio, ZIPs, or EPubs to Markdown using `uvx markitdown` |
+| `philipp-android-skills` (Router) | `$SKILL_ROOT/philipp-android-skills/SKILL.md` | — | Master router for opinionated Android and Kotlin Multiplatform architecture conventions across all layers |
+| `philipp-android-skills/android-module-structure` | `$SKILL_ROOT/philipp-android-skills/android-module-structure/SKILL.md` | — | Project setup, Gradle conventions, feature-layered modularization, version catalogs, and dependency rules |
+| `philipp-android-skills/android-presentation-mvi` | `$SKILL_ROOT/philipp-android-skills/android-presentation-mvi/SKILL.md` | — | MVI presentation pattern: single `State`, sealed `Action`, one-time `Event` side-effects via `Channel`, ViewModel wiring, Root/Screen composables, `UiText`, and `SavedStateHandle` |
+| `philipp-android-skills/android-navigation` | `$SKILL_ROOT/philipp-android-skills/android-navigation/SKILL.md` | — | Type-safe Navigation Compose using `@Serializable` routes, per-feature nav graphs, and cross-feature navigation callbacks |
+| `philipp-android-skills/android-di-koin` | `$SKILL_ROOT/philipp-android-skills/android-di-koin/SKILL.md` | — | Koin dependency injection: feature-layer modules, `single`/`viewModel`/`factory` scoping, `:app` wiring, and `koinViewModel()` in composables |
+| `philipp-android-skills/android-data-layer` | `$SKILL_ROOT/philipp-android-skills/android-data-layer/SKILL.md` | — | Repository/data-source design, DTOs, Room entities/DAOs, Ktor `HttpClient`, safe-call helpers, token storage, and offline-first caching |
+| `philipp-android-skills/android-error-handling` | `$SKILL_ROOT/philipp-android-skills/android-error-handling/SKILL.md` | — | Typed `Result` values, `DataError`, domain errors, and mapping success or failure across data and presentation layers |
+| `philipp-android-skills/android-compose-components` | `$SKILL_ROOT/philipp-android-skills/android-compose-components/SKILL.md` | — | Reusable extracted Compose components, design-system UI building blocks, and `@Preview` setups |
+| `philipp-android-skills/android-unit-testing` | `$SKILL_ROOT/philipp-android-skills/android-unit-testing/SKILL.md` | — | In-process tests for ViewModels, use cases, reducers, and mappers using JUnit 5 + AssertK + Turbine + fake repositories |
+| `philipp-android-skills/pr-quiz` | `$SKILL_ROOT/philipp-android-skills/pr-quiz/SKILL.md` | — | Generating and maintaining interactive reviewer quizzes for GitHub pull requests |
 
 ## Routing Steps
 

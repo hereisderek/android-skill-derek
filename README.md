@@ -38,9 +38,20 @@ android-skill-derek/
 │       └── worker-task-template.md                    # 6-Point Worker Task-Spec preamble template
 ├── release-cicd/                                      # Release tagging (v* / beta_*) & CI/CD pipeline policy
 │   └── SKILL.md
-└── markdown-converter/                                # Document-to-Markdown conversion via uvx markitdown
-    ├── SKILL.md
-    └── .skillfish.json
+├── markdown-converter/                                # Document-to-Markdown conversion via uvx markitdown
+│   ├── SKILL.md
+│   └── .skillfish.json
+└── philipp-android-skills/                            # Philipp Lackner Android & KMP Architecture Skills
+    ├── SKILL.md                                       # Architecture router for child skills
+    ├── android-module-structure/                      # Feature-layered modularization & Gradle conventions
+    ├── android-presentation-mvi/                      # MVI State/Action/Event & Root/Screen composables
+    ├── android-navigation/                            # Type-safe Navigation Compose routes & graphs
+    ├── android-di-koin/                               # Koin dependency injection modules & scoping
+    ├── android-data-layer/                            # Repositories, Room, Ktor, DTOs & offline-first
+    ├── android-error-handling/                        # Typed Result & DataError handling
+    ├── android-compose-components/                    # Reusable Compose UI components & previews
+    ├── android-unit-testing/                          # JUnit 5, AssertK & Turbine unit testing
+    └── pr-quiz/                                       # GitHub PR reviewer quiz generator
 ```
 
 ## Installation
