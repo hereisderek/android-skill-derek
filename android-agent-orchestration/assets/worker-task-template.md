@@ -31,7 +31,12 @@ You are the **`<FEATURE_OR_BRANCH_NAME>`** sub-agent operating in worktree `<WOR
 - Adhere strictly to `AGENTS.md`, `docs/standards/CODING_STANDARDS.md`, and `docs/ci-cd/TOOLCHAIN_GUIDELINES.md`.
 - **Strict File Boundary**: Never modify files outside `<MODULE_PATHS>` or edit root Gradle files (`settings.gradle.kts`, `build.gradle.kts`, `gradle/libs.versions.toml`) without escalating to the Coordinator.
 - **Signing Key Discipline**: Use the shared debug keystore (`~/.android/debug.keystore`) for all debug builds. Never commit production `.jks`/`.keystore` files or plaintext signing passwords to Git; release signing must read from environment variables (`ANDROID_KEYSTORE_PATH`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`).
-- **Device Access Rule**: Only run on-device commands (`./gradlew installDebug`, `connectedDebugAndroidTest`) if the Coordinator explicitly assigned you a leased `ANDROID_SERIAL` via `device-pool.sh`. Otherwise, run JVM unit tests (`./gradlew testDebugUnitTest`), Robolectric/Compose JVM tests, and `./gradlew lintDebug` in your worktree and leave on-device verification to the Coordinator.
+- **Device Access & Exclusive Locking Rules**:
+  - **Querying**: You may query connected devices at any time via `bash "$SKILL_ROOT/state-droid-remote-device/scripts/device-pool.sh" list` or `adb devices`. Any connected device is considered a test device unless the user explicitly instructed otherwise (user instruction takes precedence).
+  - **Lease Assignment**: Run on-device commands (`./gradlew installDebug`, `connectedDebugAndroidTest`) only when holding an exclusive device lock. If the Coordinator omitted device information in this prompt, you may claim an available device directly via `bash "$SKILL_ROOT/state-droid-remote-device/scripts/device-pool.sh" lease --owner "<FEATURE_OR_BRANCH_NAME>"`.
+  - **Exclusivity**: A device lock is claimed exclusively for single use. Never run on a device held by another agent.
+  - **Active Testing Only (No Idle Holding)**: Never hold the device lock during code development or writing. Only claim or hold the lock during **active testing and validation** on hardware.
+  - Otherwise, run JVM unit tests (`./gradlew testDebugUnitTest`), Robolectric/Compose JVM tests, and `./gradlew lintDebug` in your worktree and leave on-device verification to the Coordinator.
 
 ### 4. Mandatory Layered Validation (Unit, API/Library & UI Tests)
 
@@ -47,8 +52,17 @@ You are the **`<FEATURE_OR_BRANCH_NAME>`** sub-agent operating in worktree `<WOR
 ### 6. Test-Ready Handoff
 
 - Run the relevant checks and record the exact commands and results.
-- If assigned `<ANDROID_SERIAL_OR_NONE>`, build, install, and launch the debug app on that device. Leave the requested screen or reproducible entry path ready for Coordinator testing; report package name, build variant, serial, and launch result. Do not release the lease before acknowledgement or expiry.
+- **Design, Website UI & App UI/UX Changes & Deployment Notification**:
+  - In **Manual Mode**, whenever design, website UI, or app UI/UX changes are involved, deploy the build (to assigned test device or local preview server) and explicitly notify the Coordinator that tests are ready, providing accessible preview links/ports or test device serials for manual testing.
+  - In **Auto Mode**, deploy and prepare reproducible entry points for automated validation.
+- **Post-Submission Keep-Alive & Feedback**:
+  - Remain alive after submission (**20 minutes in Manual Mode**, **10 minutes in Auto Mode**) to receive and apply any forwarded user feedback.
+- **Device Lock Handoff & Return Lifecycle**:
+  - If a device was leased, build, install, and launch the debug app on that device. Leave the requested screen or reproducible entry path ready for Coordinator testing; report package name, build variant, serial, and launch result.
+  - Transfer the device lock to the Coordinator upon delivery: `bash "$SKILL_ROOT/state-droid-remote-device/scripts/device-pool.sh" transfer --owner "<FEATURE_OR_BRANCH_NAME>" --to "coordinator"`.
+  - If the Coordinator rejects the work for fixes or improvements, the device lock will be transferred back to you along with the task.
 - If no device is assigned, create the installable artifact and report exact install/launch steps. State clearly that device validation remains pending.
+- *API changes only require automated tests unless specifically instructed otherwise.*
 
 ### 7. Shared Memory & Completion Protocol
 

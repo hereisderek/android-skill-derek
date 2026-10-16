@@ -46,19 +46,55 @@ When StageDroid is available, choose the appropriate ADB bridge method from `./a
 - **Fast Hardware Screenshots via StageDroid REST API**:
   - Prefer `curl -s http(s)://<host>:<port>/api/devices/<serial>/screenshot -o screen.png` over `adb exec-out screencap` when connected to StageDroid for zero-overhead capture.
 
-## 3. Test Device Pool & Sub-Agent Lease Assignment
+## 3. Test Device Pool & Sub-Agent Exclusive Locking Discipline
 
-During multi-agent waves, test devices may be limited. The Coordinator manages device allocation across StageDroid devices, local physical devices, and Google CLI Virtual Devices via `./scripts/device-pool.sh`:
+Test devices are often a shared, limited resource. The Coordinator and sub-agents coordinate device access across StageDroid devices, local physical ADB devices, and Google CLI Virtual Devices (AVDs) via `./scripts/device-pool.sh`:
+
+### 3.1 Device Querying & Test Device Scope
+- **Universal Query Capability**: Any agent (Coordinator or sub-agent) can query currently connected devices at any time using:
+  ```bash
+  bash "$SKILL_ROOT/state-droid-remote-device/scripts/device-pool.sh" list
+  ```
+- **Scope of Test Devices**: Any connected device (StageDroid virtual adbd, physical USB/Wireless ADB, active AVD emulator) is considered a test device by default.
+- **User Instruction Precedence**: A direct instruction from the user strictly takes precedence over this default (e.g., if the user restricts testing to specific device serials, models, or excludes certain hardware).
+
+### 3.2 Coordinator Device Registry & Assignment vs. Self-Service Lock
+- **Coordinator Device Registry**: The Coordinator maintains an active, updated registry of all available test devices, their statuses, and current lock holders.
+- **Coordinator Assignment (Standard Flow)**: Usually, the Coordinator passes the designated test device serial (`ANDROID_SERIAL=<serial>`) to the sub-agent in its task dispatch.
+- **Sub-Agent Self-Service Lock Request (Fallback Flow)**: If the Coordinator omitted test device information in the dispatch and on-device validation is needed, the sub-agent is authorized to query available devices and claim an exclusive lock on any available, unleased connected test device.
+
+### 3.3 Exclusive Lock Claiming & Active-Testing-Only Constraint
+- **Strict Single-Use Exclusivity**: When a device is actively used, either by the Coordinator or a sub-agent, it is claimed exclusively for that single use. No two agents or processes may execute against the same device simultaneously.
+- **Active Testing Only (No Holding During Development)**:
+  - An agent must **never** hold a device lock longer than needed.
+  - The lock is strictly reserved for **active testing and validation** (installing APK, executing UI tests, capturing screenshots, running audits).
+  - Devices must **never be locked during active code writing, research, or development**. If an agent is not actively running on-device tests or handing off deliverables, it must immediately release the device lock.
+
+### 3.4 Lock Transfer on Handoff & Task Rejection Lifecycle
+- **Lock Handoff on Delivery**: When a sub-agent finishes its work and delivers its build to the Coordinator, the device lock is handed in along with the deliverable so the Coordinator can perform rebase and acceptance testing.
+- **Lock Return on Rejection / Fixes**: If the Coordinator rejects the work or sends it back to the sub-agent for improvements, bug fixes, or test adjustments, the device lock is handed back along with the task so the worker can reproduce and verify fixes.
+- **Lock Release on Completion**: Once validation and merging are complete, the lock is released back to the global pool.
+- **Mandatory Release on Worker Cleanup / Teardown**: Whenever a worker gets cleaned up, released, terminated, or aborted (such as during Coordinator cycle cleanup, post-keep-alive teardown, or failure handling), any claimed device held by that worker must be released immediately:
+  ```bash
+  bash "$SKILL_ROOT/state-droid-remote-device/scripts/device-pool.sh" release --owner "<subagent-name>"
+  ```
+  No orphaned device locks may linger after worker removal.
 
 ```bash
-# List all StageDroid, local ADB, and virtual (AVD) devices with active lease owners
+# List all online devices, available AVDs, and active lease owners
 bash "$SKILL_ROOT/state-droid-remote-device/scripts/device-pool.sh" list
 
-# Lease a free device (or auto-boot an AVD if all physical/remote devices are busy) for a named sub-agent
+# Lease an available device (or auto-boot an AVD if all physical/remote devices are busy) for an agent
 bash "$SKILL_ROOT/state-droid-remote-device/scripts/device-pool.sh" lease --owner "feat-events-countdown"
 
-# Release a lease after testing finishes
-bash "$SKILL_ROOT/state-droid-remote-device/scripts/device-pool.sh" release --owner "feat-events-countdown"
+# Sub-agent hands off device lock to Coordinator upon task delivery
+bash "$SKILL_ROOT/state-droid-remote-device/scripts/device-pool.sh" transfer --owner "feat-events-countdown" --to "coordinator"
+
+# Coordinator returns device lock to sub-agent if work is rejected for fixes
+bash "$SKILL_ROOT/state-droid-remote-device/scripts/device-pool.sh" transfer --owner "coordinator" --to "feat-events-countdown"
+
+# Release lock when active testing finishes or after merge
+bash "$SKILL_ROOT/state-droid-remote-device/scripts/device-pool.sh" release --owner "coordinator"
 ```
 
 ## 4. Automatic Device Wake & Passcode Unlock

@@ -21,11 +21,16 @@ OWNER="coordinator"
 TARGET_SERIAL=""
 AVD_NAME=""
 BOOT_IF_NONE="true"
+TO_OWNER=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --owner)
       OWNER="$2"
+      shift 2
+      ;;
+    --to)
+      TO_OWNER="$2"
       shift 2
       ;;
     --serial|-s)
@@ -70,11 +75,11 @@ EMULATOR_BIN=$(find_sdk_tool emulator || true)
 AVDMANAGER_BIN=$(find_sdk_tool avdmanager || true)
 STAGEDROID_INFO=$(bash "${SCRIPT_DIR}/device-check.sh" 2>/dev/null || echo "{}")
 
-python3 - "${ACTION}" "${LEASES_FILE}" "${OWNER}" "${TARGET_SERIAL}" "${AVD_NAME}" "${BOOT_IF_NONE}" "${EMULATOR_BIN}" "${AVDMANAGER_BIN}" "${STAGEDROID_INFO}" <<'PY'
+python3 - "${ACTION}" "${LEASES_FILE}" "${OWNER}" "${TARGET_SERIAL}" "${AVD_NAME}" "${BOOT_IF_NONE}" "${EMULATOR_BIN}" "${AVDMANAGER_BIN}" "${STAGEDROID_INFO}" "${TO_OWNER}" <<'PY'
 import json, os, subprocess, sys, time
 from urllib.parse import urlparse
 
-action, leases_file, owner, req_serial, avd_name, boot_if_none, emulator_bin, avdmanager_bin, sd_raw = sys.argv[1:10]
+action, leases_file, owner, req_serial, avd_name, boot_if_none, emulator_bin, avdmanager_bin, sd_raw, to_owner = sys.argv[1:11]
 
 def load_leases():
     if os.path.exists(leases_file):
@@ -159,6 +164,26 @@ elif action == "release":
                 del leases[s]
     save_leases(state)
     print(json.dumps({"ok": True, "released_serial": req_serial, "owner": owner, "active_leases": leases}))
+    sys.exit(0)
+
+elif action == "transfer":
+    target = req_serial
+    if not target:
+        for s, info in leases.items():
+            if info.get("owner") == owner:
+                target = s
+                break
+    if not target or target not in leases:
+        print(json.dumps({
+            "ok": False,
+            "error": f"No active lease found to transfer for owner '{owner}' / serial '{req_serial}'.",
+            "active_leases": leases
+        }))
+        sys.exit(1)
+    new_owner = to_owner if to_owner else "coordinator"
+    leases[target] = {"owner": new_owner, "leased_at": now}
+    save_leases(state)
+    print(json.dumps({"ok": True, "serial": target, "from": owner, "to": new_owner, "active_leases": leases}))
     sys.exit(0)
 
 elif action == "lease":

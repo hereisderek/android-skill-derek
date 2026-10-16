@@ -10,6 +10,8 @@ Coordinate complex Android (and companion backend) engineering across parallel s
 ## When to Use
 
 - Coordinating multi-module Android features, Component Gallery/theme setup, Gradle foundation work, or companion backend services across sub-agents
+- Operating in **Manual Mode** (active user review for UI/UX changes, deployment notifications) vs. **Automatic Mode** (40-min inactivity fallback, 20-sec user opt-in pause during auto tests)
+- Running the **Coordinator Cycle Workflow** (`sweep`, `check progress and merge`, `run the cycle`, `/cycle`) to drain inbox messages, inspect workers, validate mobile/backend tasks, merge cleanly, run host smoke tests, and execute complete cleanup
 - Naming, spawning, and managing isolated git-worktree sub-agents
 - Assigning scarce physical or virtual (AVD) test devices from a pool to sub-agents and testing rebased branches on device
 - Performing Coordinator verification, triaging bugs (fix on the spot vs. send back to the original sub-agent), and cleaning up worktrees and sub-agents after merge
@@ -38,19 +40,51 @@ As Coordinator, maintain a persistent local cache in `~/.config/android-skill-de
 | **Test Device Pool** | **StageDroid / Physical ADB + Google Android CLI AVDs** (`$SKILL_ROOT/state-droid-remote-device/SKILL.md`) | `sdkmanager`, `avdmanager`, `emulator -avd` virtual devices when physical devices are scarce |
 | **Design, Gallery & Signing** | **Design, Gallery, Dummy Data & Signing** (`$SKILL_ROOT/android-design-gallery-and-signing/SKILL.md`) | Shared `~/.android/debug.keystore` + env-var release signing (`ANDROID_KEYSTORE_*`) |
 
-### 1.3 Test Device Pool Allocation & Sub-Agent Device Assignment
+### 1.3 Test Device Pool Allocation, Querying & Exclusive Lock Protocol
 
-Test devices are often scarce during parallel development. The Coordinator manages the pool of physical devices (USB, Wireless ADB, StageDroid) and virtual devices (provisioned via Google's Android command-line tools `sdkmanager`, `avdmanager`, `emulator`):
+Test devices are often scarce during parallel development. The Coordinator and sub-agents manage device access across physical devices (USB, Wireless ADB, StageDroid) and virtual devices (provisioned via Google's Android command-line tools `sdkmanager`, `avdmanager`, `emulator`):
 
-1. **Inspect the Device Pool**:
+1. **Device Querying & Test Device Definition**:
+   - Any agent (Coordinator or sub-agent) can query currently connected devices at any time via `bash "$SKILL_ROOT/state-droid-remote-device/scripts/device-pool.sh" list` or `adb devices`.
+   - **Scope of Test Devices**: Any connected device is considered a test device by default unless the user explicitly instructs otherwise. A direct instruction from the user strictly takes precedence over this default.
+   - **Coordinator Registry**: The Coordinator must keep and maintain an active list of available test devices, their connection status, and current lock holders.
 
-   ```bash
-   bash "$SKILL_ROOT/state-droid-remote-device/scripts/device-pool.sh" list
-   ```
+2. **Assignment vs. Self-Service Lock Request**:
+   - **Coordinator Assignment (Standard)**: Usually, the Coordinator passes designated test device(s) (`ANDROID_SERIAL=<leased_serial>`) to the sub-agent in its task dispatch.
+   - **Sub-Agent Self-Service Lock (Fallback)**: If the Coordinator omitted device information from the task dispatch and on-device validation is needed, a sub-agent is authorized to query available devices and request an exclusive lock on any available connected device directly via `device-pool.sh lease --owner "<subagent-name>"`.
 
-2. **Assigning Devices to Sub-Agents vs. Coordinator**:
-   - **If multiple devices or AVDs are available**: When a sub-agent needs a test device to verify its work, lease a dedicated device serial (`ANDROID_SERIAL`) for that sub-agent via `device-pool.sh lease --owner "<subagent-name>"` (which automatically boots a virtual device via `emulator -avd` if physical devices are taken) and pass `ANDROID_SERIAL=<leased_serial>` in the sub-agent's task prompt.
-   - **If only a single test device exists**: Sub-agents run JVM unit tests (`./gradlew testDebugUnitTest`), Robolectric/Compose JVM tests, and `./gradlew lintDebug` in their worktrees, or request a short serialized lease through the Coordinator; the Coordinator serializes all on-device installs, UI play-testing, and rebase testing on that single device.
+3. **Exclusive Locking & Active-Testing-Only Constraint**:
+   - **Exclusive Single-Use Claim**: When a device is being actively used, either by the Coordinator or a sub-agent, it is claimed exclusively for that single use. No two agents may run commands or tests against the same device concurrently.
+   - **Active Testing Only (No Development Holding)**: No agent should hold a device lock longer than needed. Locks are reserved strictly for **active testing and validation** (installing APKs, running automated UI/instrumentation tests, capturing screenshots, executing audits). Devices must **never be locked during code development or writing**. As soon as active tests conclude, release the lock.
+
+4. **Lock Handoff & Rejection Lifecycle**:
+   - **Handoff with Deliverables**: When work is delivered from a sub-agent to the Coordinator, the device lock is handed in along with the deliverable (`device-pool.sh transfer --owner "<subagent-name>" --to "coordinator"`).
+   - **Return with Rejection**: If work is rejected for improvement/fixes and sent back to the sub-agent, the device lock is handed back along with the task (`device-pool.sh transfer --owner "coordinator" --to "<subagent-name>"`).
+   - **Single-Device Fallback**: If only a single device exists and another worker needs testing, workers run unit tests (`./gradlew testDebugUnitTest`), Robolectric/Compose JVM tests, and `./gradlew lintDebug` locally and serialize on-device access.
+
+### 1.4 Coordinator Operating Modes: Manual vs. Automatic Mode
+
+The Coordinator operates under one of two operating modes governing validation, merge gating, and worker lifecycle:
+
+1. **Manual Mode (Default on Launch)**:
+   - The user is actively viewing and approving changes.
+   - For every piece of work submitted by a sub-agent, **manual user review is required in addition to automatic validation**, whenever **design, website UI, or app UI/UX changes** are involved (treated with identical manual review requirements across app and web).
+   - In manual mode, the worker must have changes deployed and explicitly notify the Coordinator that tests are ready (providing accessible links, preview URLs, local ports, or test device serials where suitable) for manual testing.
+   - **Keep-Alive Grace Period (20 Minutes)**: The sub-agent and its worktree are kept alive for **20 minutes** after submission/merge consideration for any potential changes or follow-up tweaks.
+   - **User Feedback Forwarding**: Any user feedback on a specific piece of work received while the agent is alive is forwarded directly back to that sub-agent.
+   - **API Changes Exemption**: Unless specifically instructed otherwise by the user, API changes only require automated tests (no manual review/testing gate needed).
+
+2. **Automatic Mode**:
+   - Automated validation runs and accepts completed tasks without requiring manual user review gates.
+   - When sub-agent work is received, the Coordinator begins automated validation while simultaneously **prompting and waiting for user input for 20 seconds**. This gives the user an active window to intervene or perform manual testing if desired.
+   - If 20 seconds elapse with no user input and all automated tests pass, the work is considered accepted and advances to merge.
+   - **Keep-Alive Grace Period (10 Minutes)**: The sub-agent and its worktree are kept alive for **10 minutes** after submission/acceptance for any potential follow-up changes.
+   - **User Feedback Forwarding**: If the user provides feedback on a specific work during the 10-minute window, forward it directly back to that sub-agent.
+
+3. **Inactivity Timeout & Initial Mode Selection**:
+   - **Initial Prompt**: When the user first enters orchestration mode, the Coordinator can ask whether to run in manual or automatic mode.
+   - **Default**: Launch defaults to **Manual Mode**.
+   - **40-Minute Timeout**: If the user has not been interactive for **40 minutes**, the Coordinator automatically switches to **Automatic Mode**.
 
 ## 2. Sub-Agent Dispatch Protocol
 
@@ -107,8 +141,18 @@ ORCA orchestration worker-start \
 Before a worker hands off a build deliverable, it must make the current branch ready for Coordinator validation:
 
 - Run the relevant fast checks and the assigned test suite.
-- If it has a leased test device, build, install, and launch the debug app on that device; leave the intended screen or reproducible entry path ready for testing. Report the package, serial, build variant, and launch command/result. Do not release the lease until the Coordinator acknowledges the handoff or the agreed lease window ends.
+- **Design, Website UI & App UI/UX Changes & Deployment Notification**:
+  - In **Manual Mode**, whenever design, website UI, or app UI/UX changes are involved, the worker must deploy the changes (to the leased test device or local preview server) and explicitly notify the Coordinator that tests are ready (providing accessible preview links/ports or test device serials) for manual user testing.
+  - In **Auto Mode**, deploy and prepare reproducible entry points for automated test execution.
+- **Post-Submission Keep-Alive & Feedback**:
+  - Sub-agents remain alive post-submission (**20 minutes in Manual Mode**, **10 minutes in Auto Mode**) for potential revisions.
+  - User feedback on a specific work is forwarded directly back to that sub-agent while it remains alive.
+- **Test Device Lock Handoff & Active-Testing-Only Constraint**:
+  - The device lock must **only be claimed during active testing/validation**, never during feature development.
+  - If a device was leased, build, install, and launch the debug app on that device; leave the intended screen or reproducible entry path ready for testing. Report package name, serial, build variant, and launch command/result.
+  - Hand the device lock over to the Coordinator upon submission (`bash "$SKILL_ROOT/state-droid-remote-device/scripts/device-pool.sh" transfer --owner "<subagent-name>" --to "coordinator"`).
 - If no device was assigned, produce the installable artifact and exact install/launch steps, then state that device validation remains with the Coordinator. Do not claim on-device validation was performed.
+- *API changes only require automated tests unless specifically instructed otherwise by the user.*
 
 ## 5. Layered Results Validation (UI Play-Testing + Automated UI & API/Logic Tests)
 
@@ -144,35 +188,146 @@ When Coordinator testing (unit tests, rebase check, interactive device play-test
 - **Simple / Localized Issue -> Fix on the Spot**:
   - If the defect is small, clear, and localized (for example: a missing window inset modifier, a minor padding or text-overflow tweak, a simple rebase conflict, a missing import, or a small test assertion fix), **fix it directly on the spot** as Coordinator, re-run verification on the test device, and proceed.
 - **Complex / Multi-File / Architectural Issue -> Send Back to Original Sub-Agent**:
-  - If the defect involves broken business logic, missing feature requirements, failing multi-class flows, or missing test suites, **do not merge**. Dispatch a separate, lower-cost validation worker to reproduce and scope the issue. Give it permission to communicate directly with the implementing worker; they should share exact failures, logs, screenshots, and minimal reproduction steps. The implementing worker owns the repair and re-submission unless the Coordinator explicitly reassigns it.
-  - After the repair, the validation worker re-runs the agreed checks and reports to the Coordinator using the completion protocol: result, evidence, actual duration, residual risk, and whether the branch is ready to merge. The Coordinator retains the final merge decision.
+  - If the defect involves broken business logic, missing feature requirements, failing multi-class flows, or missing test suites, **do not merge**.
+  - **Transfer Device Lock Back**: Hand the device lock back along with the task to the sub-agent (`bash "$SKILL_ROOT/state-droid-remote-device/scripts/device-pool.sh" transfer --owner "coordinator" --to "<subagent-name>"`) so the worker has exclusive access to verify fixes on hardware.
+  - Dispatch a separate, lower-cost validation worker or instruct the original implementing worker directly, sharing exact failures, logs, screenshots, and minimal reproduction steps. The implementing worker owns the repair and re-submission unless the Coordinator explicitly reassigns it.
+  - After the repair, the worker re-runs checks and hands back the deliverable and device lock to the Coordinator. The Coordinator retains the final merge decision.
 
 ### Step 3: Post-Pass Merge & Complete Cleanup
 
 Once all tests and on-device rebase checks pass:
 
 1. **Merge the Branch**: Merge the verified worker branch cleanly into the base branch.
-2. **Release Device Lease**:
+2. **Release Device Lock**:
+   - Release the exclusive device lock back to the global pool:
 
    ```bash
-   bash "$SKILL_ROOT/state-droid-remote-device/scripts/device-pool.sh" release --owner "<subagent-name>"
+   bash "$SKILL_ROOT/state-droid-remote-device/scripts/device-pool.sh" release --owner "coordinator"
    ```
 
-3. **Terminate / Release the Sub-Agent & Clean Up Worktree**:
-   - **If using Orca**:
+3. **Sub-Agent Keep-Alive Window & Cleanup**:
+   - **Post-Submission Keep-Alive**: Do NOT terminate the sub-agent or remove its worktree immediately upon merge. Keep the sub-agent alive for **20 minutes in Manual Mode** or **10 minutes in Auto Mode** for potential revisions.
+   - **User Feedback Forwarding**: If the user provides feedback on that specific task while the agent is still alive, forward the feedback directly back to that sub-agent.
+   - **Teardown after Keep-Alive Expiration**:
+     - **Release Any Claimed Device**: Ensure any device lock claimed or held by the worker is released back to the pool:
+       ```bash
+       bash "$SKILL_ROOT/state-droid-remote-device/scripts/device-pool.sh" release --owner "<subagent-name>"
+       ```
+     - **If using Orca**:
+       ```bash
+       orca orchestration worker-release --dispatch <dispatch_id> --json
+       ```
+     - **If using Git Worktrees directly**:
+       ```bash
+       git worktree remove "<worker_worktree>"
+       git branch -d "<worker_branch>"
+       ```
+     - Confirm zero leaked worker terminals, device locks, or stale worktrees remain (`orca orchestration worker-list --run <run_id> --terminal-state reclaimable --json`, `device-pool.sh list`, and `git worktree list`).
 
+## 7. Coordinator Cycle Workflow
+
+Trigger this workflow whenever the user says:
+- `sweep`
+- `check progress and merge`
+- `run the cycle`
+- `/cycle`
+
+### Execution Sequence
+
+1. **Check Inbox**:
+   - Run `orca orchestration check` and consume all pending messages.
+   - Acknowledge each delivery with `orca orchestration check --ack <delivery_id>`.
+
+2. **Inspect Workers**:
+   - Read output from active supervised workers:
      ```bash
-     ORCA orchestration worker-release --dispatch <dispatch_id> --json
+     orca orchestration worker-read --dispatch <id>
      ```
 
-   - **If using Git Worktrees directly**:
+3. **Validate Completed Tasks**:
+   - **Mobile Tasks**:
+     - Run tests under lock:
+       ```bash
+       cd mobile && flock /tmp/dtm-gradle.lock ./gradlew :<module>:allTests
+       ```
+     - If UI changed:
+       - Assemble the debug APK:
+         ```bash
+         ./gradlew :androidApp:assembleDebug
+         ```
+       - Install on the connected test device (read dynamically from the test device pool; never hardcode IP or serial):
+         ```bash
+         TEST_DEVICE=$(bash "$SKILL_ROOT/state-droid-remote-device/scripts/device-pool.sh" list | jq -r '.online_devices[0] // empty')
+         adb -s "${TEST_DEVICE:-$ANDROID_SERIAL}" install -r <path_to_apk>
+         ```
+       - Launch the app, verify logcat has no errors, and capture screenshot.
+   - **Backend Tasks**:
+     - Run test suite:
+       ```bash
+       npm --prefix backend/core test -- --run
+       ```
+     - Run typecheck and lint:
+       ```bash
+       npm run typecheck
+       npm run lint
+       ```
+   - **Manual vs. Auto Validation & Gating**:
+     - In **Manual Mode**: If design, website UI, or app UI/UX changes are involved, require manual user testing in the exact same manner across app and web. Verify that the worker has deployed the build/preview and notified the Coordinator that tests are ready (with accessible links/preview URLs, local ports, or leased device serials).
+     - In **Auto Mode**: While running automatic tests, prompt and wait for user input for **20 seconds** so the user can still opt to do a manual test if they want. After 20 seconds and if auto tests pass, consider the work accepted.
+     - *Unless specifically instructed, API changes only require auto testing.*
 
+4. **Merge to Integration Branch**:
+   - Ensure the working tree is clean.
+   - Run non-fast-forward merge:
      ```bash
-     git worktree remove "<worker_worktree>"
-     git branch -d "<worker_branch>"
+     git merge --no-ff <branch> -m "merge: <branch> (Task ...)"
+     ```
+   - Verify integration ancestry:
+     ```bash
+     git merge-base --is-ancestor <branch> master
      ```
 
-   - Confirm zero leaked worker terminals or stale worktrees remain (`ORCA orchestration worker-list --run <run_id> --terminal-state reclaimable --json` and `git worktree list`).
+5. **Post-Merge Smoke Test & Host Discipline**:
+   - Run affected tests on `master`.
+   - Free memory and stop the Gradle daemon:
+     ```bash
+     cd mobile && ./gradlew --stop
+     ```
+
+6. **Sub-Agent Keep-Alive Window & Automatic Cleanup (AGENTS.md Rule 9)**:
+   - **Post-Submission Keep-Alive**:
+     - Do NOT terminate the sub-agent or remove its worktree immediately upon merge.
+     - Keep the sub-agent alive for **20 minutes in Manual Mode** or **10 minutes in Auto Mode** for any potential follow-up changes.
+     - **Forward User Feedback**: If the user provides feedback on that specific work while the sub-agent is still alive, forward the feedback directly back to that sub-agent (`orca orchestration worker-send --dispatch <id> ...` or harness input) for immediate iteration.
+   - **Teardown after Keep-Alive Expiration**:
+     - Once the 20-min (Manual) or 10-min (Auto) keep-alive window expires with no further user feedback:
+       - Release any claimed test device lock back to the pool:
+         ```bash
+         bash "$SKILL_ROOT/state-droid-remote-device/scripts/device-pool.sh" release --owner "<subagent-name>"
+         ```
+       - Release dispatch:
+         ```bash
+         orca orchestration worker-release --dispatch <id>
+         ```
+       - Close terminal:
+         ```bash
+         orca terminal close --terminal <handle> --tab
+         ```
+       - Terminate orphaned background processes in the worker's worktree directory.
+       - Remove worktree & branch:
+         ```bash
+         wt remove <branch>
+         ```
+       - Verify complete cleanup:
+         ```bash
+         wt list
+         git worktree list
+         bash "$SKILL_ROOT/state-droid-remote-device/scripts/device-pool.sh" list
+         ```
+
+7. **Document & Suggest Next**:
+   - Update `openspec/changes/.../tasks.md` with implementation notes.
+   - Present completed work summary to the user and outline the top 2-3 next prioritized tasks.
 
 ## Directory Layout
 
