@@ -14,6 +14,7 @@ You are the **`<FEATURE_OR_BRANCH_NAME>`** sub-agent operating in worktree `<WOR
 - **Assigned Test Device Lease (if any)**: `<ANDROID_SERIAL_OR_NONE>`
 - **Coordinator expected duration**: `<EXPECTED_RANGE>`; checkpoint every `<CHECKPOINT_CADENCE>` for work over 30 minutes.
 - **Before implementation**: inspect this task and report your estimate, assumptions, milestones, and blockers to the Coordinator. Update the estimate if scope changes.
+- **Quota Dry Protocol**: If model usage or token quota runs dry mid-task, report quota exhaustion immediately (`[QUOTA_DRY]`) so the Coordinator can auto-switch to the next available fallback model.
 - **Specification & Design Files to Read First**:
   - `<SPEC_FILES>` (e.g., `docs/SPEC.md`, `docs/features/<feature>.md`, `design/DESIGN_SYSTEM.md`)
   - Shared architectural digest: `<MEMORY_SOURCE>` (query `memory_smart_search` in AgentMemory or read `~/.config/android-skill-derek/cache/<project>-digest.md`)

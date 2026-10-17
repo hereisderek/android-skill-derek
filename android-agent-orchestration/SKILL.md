@@ -99,11 +99,35 @@ The Coordinator operates under one of two operating modes governing validation, 
 
 ## 2. Sub-Agent Dispatch Protocol
 
-## 2.1 Choose the Right Runtime and Advisor
+## 2.1 Model Selection, Availability & Dynamic Quota Routing
 
-- Do not default workers to the Coordinator's runtime. Select an available agent and model based on the task's complexity, tool access, Android expertise, cost, and expected duration.
-- For a long, multi-step, ambiguous, repeatedly failing, or completion-critical Claude Code task, use the experimental [Advisor](https://code.claude.com/docs/en/advisor) when the account, main model, and billing setup support it. Pair a cost-effective main model with an advisor that is at least as capable; do not enable it for simple, direct work where the additional consultation has little value.
-- Record the chosen runtime/model and the reason in the dispatch. If Advisor is unavailable or unsupported, continue with an independent review or validation worker when warranted.
+> **Precedence Rule**: The following model routing rules are only suitable when the respective models are available. **A direct instruction from the user strictly takes precedence over this default routing.**
+
+### 2.1.1 Model Selection by Task Complexity
+- **Harder Tasks & Design Tasks**:
+  - Use **Claude** (`--agent claude` or Antigravity's Claude model) for high-complexity engineering challenges, complex algorithms/concurrency, and **any task relating to design** (UI/UX layouts, Compose styling tokens, design systems, and visual fidelity).
+  - **Antigravity Claude**: Antigravity also has a small allocation of Claude models; use it when suitable for harder tasks or design work.
+- **Smaller & Easier Tasks**:
+  - Use **Antigravity Flash** (`--agent antigravity --model flash` or `flash_lite`) for simple, lightweight, or highly deterministic tasks (e.g., small bug fixes, boilerplate data classes, straightforward refactors, doc updates).
+- **Antigravity Argon (Sonnet-Tier Equivalent)**:
+  - Antigravity **Argon** is treated as equivalent to **Sonnet** (`--agent antigravity --model argon`). Use it for mid-to-high complexity Android implementation tasks.
+- **Effort Constraint**:
+  - **Do NOT use high effort** (`--effort high` is strictly avoided).
+  - Default to `--effort medium` for standard or complex tasks, and `--effort low` for fast, lightweight tasks.
+
+### 2.1.2 Quota Depletion ("Dry") & Automatic Model Switching
+- **Report Quota Dry**: When a model's usage/quota runs dry (rate limited, 429 quota exhaustion, capacity limit, or token budget exhausted), the sub-agent or Coordinator must report the exhaustion immediately (e.g., `[QUOTA_DRY] Model <model_name> usage dry`).
+- **Automatic Fallback Switching**: The Coordinator must **automatically switch to the next suitable and available model** in the fallback chain without stalling work:
+  - **Fallback Chain for Harder / Design Tasks**:
+    1. Primary: Claude (`--agent claude --model claude-sonnet-4-6 --effort medium`)
+    2. Secondary: Antigravity Claude (`--agent antigravity --model claude --effort medium`)
+    3. Tertiary: Antigravity Argon (`--agent antigravity --model argon --effort medium`, Sonnet-tier equivalent)
+    4. Fallback: Antigravity Pro (`--agent antigravity --model pro --effort medium`)
+  - **Fallback Chain for Smaller / Easier Tasks**:
+    1. Primary: Antigravity Flash (`--agent antigravity --model flash`)
+    2. Secondary: Antigravity Flash Lite (`--agent antigravity --model flash_lite`)
+    3. Fallback: Antigravity Argon (`--agent antigravity --model argon --effort low`) or standard lightweight model
+- **Advisor for Claude Tasks**: For a long, multi-step, ambiguous, or completion-critical Claude Code task, use the experimental [Advisor](https://code.claude.com/docs/en/advisor) when the account, main model, and billing setup support it. Pair a cost-effective main model with an advisor that is at least as capable. Record the chosen runtime/model and the reason in the dispatch.
 
 ## 2.2 Timeboxed Dispatch and Progress Protocol
 
