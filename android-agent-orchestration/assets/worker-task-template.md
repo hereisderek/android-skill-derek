@@ -52,6 +52,12 @@ You are the **`<FEATURE_OR_BRANCH_NAME>`** sub-agent operating in worktree `<WOR
 ### 6. Test-Ready Handoff
 
 - Run the relevant checks and record the exact commands and results.
+- **Mandatory 4-Part Handoff Summary**:
+  Your completion report and handoff message must explicitly provide the details the Coordinator presents to the user before testing:
+  1. **What was changed**: List modified files, UI components, screens, APIs, routes, or schema migrations.
+  2. **Expected behavior**: Explain intended user flows, UI appearance, animation transitions, and state behavior.
+  3. **What to test for**: Specific test steps, edge cases, and verification checkpoints to test.
+  4. **Credentials & Test Info**: Any test credentials, test accounts, tokens, mock flags, accessible preview URLs/ports, or test device serials needed to carry out testing.
 - **Design, Website UI & App UI/UX Changes & Deployment Notification**:
   - In **Manual Mode**, whenever design, website UI, or app UI/UX changes are involved, deploy the build (to assigned test device or local preview server) and explicitly notify the Coordinator that tests are ready, providing accessible preview links/ports or test device serials for manual testing.
   - In **Auto Mode**, deploy and prepare reproducible entry points for automated validation.

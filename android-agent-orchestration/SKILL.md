@@ -70,14 +70,20 @@ The Coordinator operates under one of two operating modes governing validation, 
    - The user is actively viewing and approving changes.
    - For every piece of work submitted by a sub-agent, **manual user review is required in addition to automatic validation**, whenever **design, website UI, or app UI/UX changes** are involved (treated with identical manual review requirements across app and web).
    - In manual mode, the worker must have changes deployed and explicitly notify the Coordinator that tests are ready (providing accessible links, preview URLs, local ports, or test device serials where suitable) for manual testing.
+   - **Pre-Review Detailed Report**: Before prompting the user for manual testing/approval, the Coordinator must display a comprehensive test briefing (what was changed, expected behavior, what to test for, and credentials/test prerequisites).
    - **Keep-Alive Grace Period (20 Minutes)**: The sub-agent and its worktree are kept alive for **20 minutes** after submission/merge consideration for any potential changes or follow-up tweaks.
    - **User Feedback Forwarding**: Any user feedback on a specific piece of work received while the agent is alive is forwarded directly back to that sub-agent.
    - **API Changes Exemption**: Unless specifically instructed otherwise by the user, API changes only require automated tests (no manual review/testing gate needed).
 
 2. **Automatic Mode**:
    - Automated validation runs and accepts completed tasks without requiring manual user review gates.
-   - When sub-agent work is received, the Coordinator begins automated validation while simultaneously **prompting and waiting for user input for 20 seconds**. This gives the user an active window to intervene or perform manual testing if desired.
-   - If 20 seconds elapse with no user input and all automated tests pass, the work is considered accepted and advances to merge.
+   - **Detailed Report Right Before the 2-Min Wait**: When sub-agent work is received, *right before entering the 2-minute wait*, the Coordinator must display a detailed report covering:
+     1. **What was changed**: Specific files, components, UI layouts, APIs, routes, or schema migrations modified.
+     2. **Expected behavior**: Intended user flow, UI states, animations, performance characteristics, and visual outcomes.
+     3. **What to test for**: Specific test paths, edge cases, interactions to verify, and verification criteria.
+     4. **Credentials & Test Prerequisites**: Any credentials, test accounts, mock tokens, API keys, accessible preview links/ports, or test device serials needed to carry out testing.
+   - **2-Minute User Intervention Window**: While running automated tests, the Coordinator prompts and waits for user input for **2 minutes** (120 seconds). This gives the user an active window to intervene or perform manual testing if desired.
+   - If **2 minutes** elapse with no user input and all automated tests pass, the work is considered accepted and advances to merge.
    - **Keep-Alive Grace Period (10 Minutes)**: The sub-agent and its worktree are kept alive for **10 minutes** after submission/acceptance for any potential follow-up changes.
    - **User Feedback Forwarding**: If the user provides feedback on a specific work during the 10-minute window, forward it directly back to that sub-agent.
 
@@ -272,8 +278,14 @@ Trigger this workflow whenever the user says:
        npm run lint
        ```
    - **Manual vs. Auto Validation & Gating**:
+     - **Detailed Report Right Before Testing / Wait**:
+       - Right before prompting the user (in Manual Mode) or entering the 2-minute wait (in Auto Mode), the Coordinator must display a comprehensive test briefing:
+         1. **What was changed**: Summary of modified files, components, screens, APIs, endpoints, or DB schemas.
+         2. **Expected behavior**: Intended user flow, UI states (populated, empty, loading, error), animation curves, and behavior.
+         3. **What to test for**: Specific test steps, edge cases, interactions to verify, and verification checkpoints.
+         4. **Credentials & Test Prerequisites**: Any credentials, test accounts, mock tokens, API keys, accessible preview links/ports, or test device serials needed to carry out testing.
      - In **Manual Mode**: If design, website UI, or app UI/UX changes are involved, require manual user testing in the exact same manner across app and web. Verify that the worker has deployed the build/preview and notified the Coordinator that tests are ready (with accessible links/preview URLs, local ports, or leased device serials).
-     - In **Auto Mode**: While running automatic tests, prompt and wait for user input for **20 seconds** so the user can still opt to do a manual test if they want. After 20 seconds and if auto tests pass, consider the work accepted.
+     - In **Auto Mode**: While running automatic tests, display the detailed report and prompt/wait for user input for **2 minutes** (120 seconds) so the user can still opt to do a manual test if they want. After 2 minutes and if auto tests pass, consider the work accepted.
      - *Unless specifically instructed, API changes only require auto testing.*
 
 4. **Merge to Integration Branch**:
