@@ -82,8 +82,13 @@ The Coordinator operates under one of two operating modes governing validation, 
      2. **Expected behavior**: Intended user flow, UI states, animations, performance characteristics, and visual outcomes.
      3. **What to test for**: Specific test paths, edge cases, interactions to verify, and verification criteria.
      4. **Credentials & Test Prerequisites**: Any credentials, test accounts, mock tokens, API keys, accessible preview links/ports, or test device serials needed to carry out testing.
-   - **2-Minute User Intervention Window**: While running automated tests, the Coordinator prompts and waits for user input for **2 minutes** (120 seconds). This gives the user an active window to intervene or perform manual testing if desired.
-   - If **2 minutes** elapse with no user input and all automated tests pass, the work is considered accepted and advances to merge.
+   - **One-Time 2-Minute Wait Per Delivered Job (Never Looped)**:
+     - While running automated tests, the Coordinator triggers the 2-minute wait (120 seconds) **strictly once** after a worker's job has completed and delivered waiting for verification.
+     - **Do not keep running the wait in a loop.** It must never be repeated or polled cyclically for the same job.
+     - **Auto-Advance on No Response**: If the user has not responded after the 2-minute window and automated tests pass, the Coordinator considers that job accepted, proceeds with merge/cleanup, and **immediately continues with the next job**.
+   - **Fleet Completion to Idle (No More Wait)**:
+     - The Coordinator repeats this single one-time verification wait for subsequent worker jobs as they deliver.
+     - Once **all jobs** have completed and been verified, the Coordinator transitions immediately to **idle** state—**no more waiting, no polling loops**.
    - **Keep-Alive Grace Period (10 Minutes)**: The sub-agent and its worktree are kept alive for **10 minutes** after submission/acceptance for any potential follow-up changes.
    - **User Feedback Forwarding**: If the user provides feedback on a specific work during the 10-minute window, forward it directly back to that sub-agent.
 
@@ -285,7 +290,12 @@ Trigger this workflow whenever the user says:
          3. **What to test for**: Specific test steps, edge cases, interactions to verify, and verification checkpoints.
          4. **Credentials & Test Prerequisites**: Any credentials, test accounts, mock tokens, API keys, accessible preview links/ports, or test device serials needed to carry out testing.
      - In **Manual Mode**: If design, website UI, or app UI/UX changes are involved, require manual user testing in the exact same manner across app and web. Verify that the worker has deployed the build/preview and notified the Coordinator that tests are ready (with accessible links/preview URLs, local ports, or leased device serials).
-     - In **Auto Mode**: While running automatic tests, display the detailed report and prompt/wait for user input for **2 minutes** (120 seconds) so the user can still opt to do a manual test if they want. After 2 minutes and if auto tests pass, consider the work accepted.
+     - In **Auto Mode (One-Time Wait Per Delivered Job, Never Looped)**:
+       - When a worker's job has completed and delivered waiting for verification, display the detailed report and trigger the 2-minute wait (120 seconds) **strictly once**.
+       - **Do not keep running the wait in a loop.** It must never be repeated for the same delivered job.
+       - If the user has not responded within the 2-minute window and automated tests pass, consider that job accepted, merge, and **continue directly with the next job**.
+       - Repeat one-time verification per delivered job until all jobs across the wave/fleet have completed and verified.
+       - **Once all jobs have completed and verified, transition immediately to idle—no more waiting.**
      - *Unless specifically instructed, API changes only require auto testing.*
 
 4. **Merge to Integration Branch**:
