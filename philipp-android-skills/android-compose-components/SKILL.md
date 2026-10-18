@@ -445,6 +445,15 @@ val alpha by animateFloatAsState(if (isVisible) 1f else 0f)
 Box(modifier = Modifier.alpha(alpha))  // recomposes every frame
 ```
 
+### Material Design Motion & Interaction-Driven Animation
+
+Animations must adhere to the latest version of **Material Design animation/motion** (Material 3 Motion System) and gesture-driven interaction rules:
+- **Material 3 Motion System**: Use expressive, natural easing curves (Standard, Emphasized, Decelerated) and spring physics for natural elasticity.
+- **Gesture-Driven Inputs**: For any animation triggered by touching, dragging, scrolling, or swiping (collapsing headers, carousels, bottom sheets, pull to refresh, swipe actions), adhere to `interaction-driven-animation`:
+  1. While user input is active, animated state is a direct 1:1 function of the input (finger position, scroll offset). Do not trigger timed animations or threshold snaps during the gesture.
+  2. When the gesture ends or interrupts, continue motion from the release velocity using momentum/fling or spring physics.
+  3. If touched again while settling, immediately halt the settling animation and return control to the finger without a visual jump.
+
 ### Synchronized Multi-Element Animations
 
 When two distinct UI elements have a synchronized animation (such as sharing the same trigger, e.g. user interaction or gesture):
@@ -452,6 +461,14 @@ When two distinct UI elements have a synchronized animation (such as sharing the
 - **Unified Fling**: Fling gestures must be unified across both elements to maintain seamless kinetic continuity instead of disjointed, independent deceleration curves.
 - **Smooth Execution**: The animation must remain smooth, cohesive, and free of jank.
 - **Precedence**: A direct instruction from the user takes precedence over this idle rule.
+
+### Cross-Platform Adaptations (Theme, Icon & Style)
+
+For apps that are cross-platform (Compose Multiplatform / KMP, Desktop, iOS, Web):
+- **Platform Conventions**: Design, theme, icons, and styles should adapt to their respective platform's practice:
+  - **Android**: Material Design 3 tokens, Material Symbols, predictive back, Android system insets.
+  - **iOS**: Apple Human Interface Guidelines (SF Symbols, native navigation bars/toolbars, swipe-to-go-back gesture physics, Cupertino dialogs).
+  - **Web / Desktop**: Desktop window frames, hover states, keyboard shortcuts, mouse-wheel scroll physics, platform fonts.
 
 ---
 
@@ -497,7 +514,9 @@ Icon(
 - [ ] Colors from `MaterialTheme.colorScheme`, not hardcoded
 - [ ] All user-facing strings via `stringResource`
 - [ ] Animations read in `graphicsLayer {}` / `offset {}` lambdas
+- [ ] Animations follow latest Material Design animation/motion standards and interaction-driven principles (1:1 finger tracking, momentum/fling continuation, no jump on touch interrupt)
 - [ ] Synchronized multi-element animations are continuous with unified fling and smooth motion (unless explicitly instructed otherwise by user)
+- [ ] Cross-platform apps adapt design, theme, icon, and style to respective platform practices (Material 3 on Android, HIG/SF Symbols on iOS, web/desktop conventions)
 - [ ] One `@Preview` per distinct state — every UI-affecting `Boolean`/`enum` value, content/data variation, short *and* long text, light *and* dark theme, plus width/`fontScale` previews wherever the layout can reflow — all wrapped in app theme
 - [ ] Set visibility: `private` / `internal` / `public` based on scope
 - [ ] No effect handlers unless truly necessary

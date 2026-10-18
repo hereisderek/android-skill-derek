@@ -37,13 +37,28 @@ Every screen must be edge-to-edge (`enableEdgeToEdge()`) and explicitly handle s
   - Use flexible layouts (`Modifier.weight`, `FlowRow`, `BoxWithConstraints`, adaptive `WindowWidthSizeClass`) and avoid fixed pixel/dp widths or single-line text without `maxLines` + `TextOverflow.Ellipsis`.
   - Verify on device across multiple screen sizes, resolutions, densities (`wm size`, `wm density`), and font scales (`font_scale 1.3`) using `$SKILL_ROOT/state-droid-remote-device/scripts/device-ui-audit.sh`.
 
-### 1.3 Motion & Synchronized Animation Discipline
+### 1.3 Latest Material Design Animation & Motion Standards
 
-When two distinct UI elements have a synchronized animation (such as sharing the same trigger, e.g. user interaction or gesture):
-- **Continuous, Not Discrete**: Motion must be continuous rather than snapping between discrete states or steps.
-- **Unified Fling**: Fling gestures must use unified kinetic physics across both elements to maintain seamless momentum instead of disconnected or conflicting deceleration curves.
-- **Smoothness**: The animation must remain fluid and smooth.
+Animations must follow the latest version of **Material Design animation/motion** (Material 3 Motion System) and interaction-driven principles:
+- **Expressive Easing & Springs**: Use Material 3 standard, emphasized, and decelerated easing curves, and spring physics for natural elasticity.
+- **Container Transforms & Shared Axis**: Morph incoming and outgoing components seamlessly (e.g. card expansion into details, shared axis transitions across tabs/flows).
+- **Synchronized Motion Discipline**: When two distinct UI elements have a synchronized animation (such as sharing the same trigger, e.g. user interaction or gesture):
+  - **Continuous, Not Discrete**: Motion must be continuous rather than snapping between discrete states or steps.
+  - **Unified Fling**: Fling gestures must use unified kinetic physics across both elements to maintain seamless momentum instead of disconnected or conflicting deceleration curves.
+  - **Smoothness**: The animation must remain fluid and smooth.
+- **Interaction-Driven Animation**: Apply `$SKILL_ROOT/interaction-driven-animation/SKILL.md` for any animation triggered by touching, dragging, scrolling, or swiping (1:1 finger tracking, momentum fling on release, zero jump on touch interruption).
 - **Precedence**: A direct instruction from the user takes precedence over this idle rule.
+
+### 1.4 Cross-Platform Adaptation (Design, Theme, Icon & Style)
+
+For apps that are cross-platform (Kotlin Multiplatform / Compose Multiplatform, Flutter, React Native, or Web targets), **design, theme, icon, and style must adapt to their respective platform's practice**:
+- **Android**:
+  - Follow **Material Design 3**: Material You dynamic color, Material Symbols/Icons, Android predictive back gestures, top/bottom app bars, standard elevation, and system insets.
+- **iOS / iPadOS / macOS**:
+  - Follow **Apple Human Interface Guidelines (HIG)**: SF Symbols, native navigation bars, segmented controls, Cupertino action sheets/dialogs, swipe-to-go-back gesture physics, and platform translucency/vibrancy.
+- **Web & Desktop**:
+  - Adapt typography scales, cursor/hover feedback, keyboard focus indicators, mouse-wheel scrolling curves, and responsive desktop window frames.
+- **Consistency vs. Familiarity**: Maintain the app's core brand identity while ensuring navigation patterns, touch targets, icon metaphors, and typography feel completely native and familiar to users on each target platform.
 
 ## 2. Shared Component Gallery (Visual Feedback Showcase)
 
