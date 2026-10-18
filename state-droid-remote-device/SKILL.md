@@ -74,6 +74,7 @@ Test devices are often a shared, limited resource. The Coordinator and sub-agent
 - **Lock Handoff on Delivery**: When a sub-agent finishes its work and delivers its build to the Coordinator, the device lock is handed in along with the deliverable so the Coordinator can perform rebase and acceptance testing.
 - **Lock Return on Rejection / Fixes**: If the Coordinator rejects the work or sends it back to the sub-agent for improvements, bug fixes, or test adjustments, the device lock is handed back along with the task so the worker can reproduce and verify fixes.
 - **Lock Release on Completion**: Once validation and merging are complete, the lock is released back to the global pool.
+- **Immediate Lock Release for Validation Sub-Agents**: Test and validation sub-agents (dispatched by the Coordinator using Gemini Flash) claim device locks strictly during active test execution and on-device audits. As soon as testing completes and results are reported, the validation worker must release the device lock back to the pool immediately before teardown (validation workers have no keep-alive grace period).
 - **Mandatory Release on Worker Cleanup / Teardown**: Whenever a worker gets cleaned up, released, terminated, or aborted (such as during Coordinator cycle cleanup, post-keep-alive teardown, or failure handling), any claimed device held by that worker must be released immediately:
   ```bash
   bash "$SKILL_ROOT/state-droid-remote-device/scripts/device-pool.sh" release --owner "<subagent-name>"

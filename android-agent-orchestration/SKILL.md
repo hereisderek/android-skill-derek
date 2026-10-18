@@ -71,7 +71,7 @@ The Coordinator operates under one of two operating modes governing validation, 
    - For every piece of work submitted by a sub-agent, **manual user review is required in addition to automatic validation**, whenever **design, website UI, or app UI/UX changes** are involved (treated with identical manual review requirements across app and web).
    - In manual mode, the worker must have changes deployed and explicitly notify the Coordinator that tests are ready (providing accessible links, preview URLs, local ports, or test device serials where suitable) for manual testing.
    - **Pre-Review Detailed Report**: Before prompting the user for manual testing/approval, the Coordinator must display a comprehensive test briefing (what was changed, expected behavior, what to test for, and credentials/test prerequisites).
-   - **Keep-Alive Grace Period (20 Minutes)**: The sub-agent and its worktree are kept alive for **20 minutes** after submission/merge consideration for any potential changes or follow-up tweaks.
+   - **Keep-Alive Grace Period (20 Minutes for Feature Workers)**: Feature sub-agents and their worktrees are kept alive for **20 minutes** after submission/merge consideration for any potential changes or follow-up tweaks. *(Note: Test/validation workers do not enter keep-alive; they clean up and close immediately once done).*
    - **User Feedback Forwarding**: Any user feedback on a specific piece of work received while the agent is alive is forwarded directly back to that sub-agent.
    - **API Changes Exemption**: Unless specifically instructed otherwise by the user, API changes only require automated tests (no manual review/testing gate needed).
 
@@ -89,7 +89,7 @@ The Coordinator operates under one of two operating modes governing validation, 
    - **Fleet Completion to Idle (No More Wait)**:
      - The Coordinator repeats this single one-time verification wait for subsequent worker jobs as they deliver.
      - Once **all jobs** have completed and been verified, the Coordinator transitions immediately to **idle** state—**no more waiting, no polling loops**.
-   - **Keep-Alive Grace Period (10 Minutes)**: The sub-agent and its worktree are kept alive for **10 minutes** after submission/acceptance for any potential follow-up changes.
+   - **Keep-Alive Grace Period (10 Minutes for Feature Workers)**: Feature sub-agents and their worktrees are kept alive for **10 minutes** after submission/acceptance for any potential follow-up changes. *(Note: Test/validation workers clean up and close immediately once done).*
    - **User Feedback Forwarding**: If the user provides feedback on a specific work during the 10-minute window, forward it directly back to that sub-agent.
 
 3. **Inactivity Timeout & Initial Mode Selection**:
@@ -129,9 +129,22 @@ The Coordinator operates under one of two operating modes governing validation, 
     3. Fallback: Antigravity Argon (`--agent antigravity --model argon --effort low`) or standard lightweight model
 - **Advisor for Claude Tasks**: For a long, multi-step, ambiguous, or completion-critical Claude Code task, use the experimental [Advisor](https://code.claude.com/docs/en/advisor) when the account, main model, and billing setup support it. Pair a cost-effective main model with an advisor that is at least as capable. Record the chosen runtime/model and the reason in the dispatch.
 
+### 2.1.3 Validation Agent Delegation & Immediate Teardown Discipline
+- **Coordinator Does Not Validate Directly**: Unless the test or validation task is **super easy and straightforward** (such as running a single trivial unit test or verifying a 1-line typo fix), the Coordinator does **not** perform validation itself.
+- **Lower-Intelligence Validation Agent**: The Coordinator dispatches a lower-intelligence agent to run the validation, execute test suites, perform on-device play-testing/audits, verify logs/screenshots, and report back:
+  - **Model Specification**: Currently use **Gemini latest Flash model with low/medium effort** (`--agent antigravity --model flash --effort low` or `--effort medium`, or `--agent gemini --model gemini-2.5-flash`).
+- **Immediate Cleanup on Completion (No Keep-Alive)**:
+  - Unlike feature-authoring workers (which remain alive for 10 or 20 minutes for follow-up adjustments), **any test/validation worker or sub-agent, once its job is done and results are reported, must just clean up and close immediately**.
+  - Immediate teardown sequence:
+    1. Release any claimed device lock back to the pool (`bash "$SKILL_ROOT/state-droid-remote-device/scripts/device-pool.sh" release --owner "<validation-agent-name>"`).
+    2. Release worker dispatch (`orca orchestration worker-release --dispatch <id>`).
+    3. Close worker terminal (`orca terminal close --terminal <handle> --tab`).
+    4. Terminate any orphaned background processes in the validation worktree.
+    5. Remove the validation worktree and branch (`wt remove <branch>`).
+
 ## 2.2 Timeboxed Dispatch and Progress Protocol
 
-Every delegated task has a bounded, two-way estimate. Keep simple, localized validation or fixes with the Coordinator; delegate only work whose complexity benefits from isolation or a second model.
+Every delegated task has a bounded, two-way estimate. Keep only super easy, straightforward validation or localized trivial fixes with the Coordinator; delegate all other validation (to Gemini Flash) and feature development (to suitable feature agents) to sub-agents.
 
 1. **Coordinator dispatch**: state the requested outcome, the expected time range, a checkpoint cadence for work exceeding 30 minutes, and the handoff requirements below.
 2. **Worker assessment before implementation**: inspect the task and reply to the Coordinator with its own estimate, assumptions, milestones, and any likely blocker *before* changing code. It must revise that estimate promptly if scope changes.
@@ -198,13 +211,15 @@ Every feature must be validated across three complementary layers:
    - Execute real or mocked library/API requests to verify wire serialization, auth headers, error handling, and edge cases.
 2. **Automated UI Test Layer**:
    - Write automated Compose UI / Espresso instrumentation tests covering user interactions, state transitions (Populated, Empty, Error, Loading using dummy data fixtures), and navigation.
-3. **Interactive On-Device Play-Testing & Multi-Screen Audit (Coordinator)**:
-   - Wake and unlock the test device (`device-wake-unlock.sh`), install the debug APK, launch the app and the **Shared Component Gallery**, and actively **play around with the UI** (tap buttons, toggle Light/Dark theme, switch dummy data scenarios, scroll lists, test dialogs and back navigation).
-   - Run `device-ui-audit.sh` to verify different screen sizes, resolutions, and densities (`wm size`, `wm density`, `font_scale 1.3`), checking that no text or edges are cut off and that the **status bar**, **display cutout (notch/pinhole)**, and **bottom navigation bar** insets are respected.
+3. **Interactive On-Device Play-Testing & Multi-Screen Audit (Validation Delegation)**:
+   - **Delegation to Lower-Intelligence Validation Agent**: Unless the validation is super easy and straightforward, the Coordinator delegates on-device play-testing and UI audits to a lower-intelligence sub-agent (Gemini latest Flash model with low/medium effort: `--agent antigravity --model flash --effort low|medium` or `--agent gemini --model gemini-2.5-flash`).
+   - The validation agent wakes and unlocks the test device (`device-wake-unlock.sh`), installs the debug APK, launches the app and the **Shared Component Gallery**, and actively **plays around with the UI** (taps buttons, toggles Light/Dark theme, switches dummy data scenarios, scrolls lists, tests dialogs and back navigation).
+   - Runs `device-ui-audit.sh` to verify different screen sizes, resolutions, and densities (`wm size`, `wm density`, `font_scale 1.3`), checking that no text or edges are cut off and that the **status bar**, **display cutout (notch/pinhole)**, and **bottom navigation bar** insets are respected.
+   - Reports detailed findings, screenshots, and logs back to the Coordinator, and **immediately cleans up and closes upon completion**.
 
 ## 6. Coordinator Rebase Testing, Bug Triage (Fix-on-the-Spot vs. Send-Back) & Cleanup
 
-All final verification is performed by **you (the Coordinator)** before any code is merged into the main branch:
+All final verification is overseen by **you (the Coordinator)** before any code is merged into the main branch:
 
 ### Step 1: Rebase onto Target Branch & Test the Rebase on Device
 
@@ -214,7 +229,7 @@ Before merging a worker's branch, rebase the worker's worktree branch onto the l
 git -C "<worker_worktree>" rebase main
 ```
 
-Then run the full test suite (`./gradlew lintDebug testDebugUnitTest`) AND install/test the **rebased build on the test device** (`device-verify-gate.sh --run-ui-audit`) to guarantee the rebase introduced zero build, runtime, or visual regressions.
+Unless the validation is super easy and straightforward, the Coordinator dispatches a lower-intelligence validation worker (Gemini latest Flash, low/medium effort) to run the full test suite (`./gradlew lintDebug testDebugUnitTest`) AND install/test the **rebased build on the test device** (`device-verify-gate.sh --run-ui-audit`) to guarantee the rebase introduced zero build, runtime, or visual regressions. Once validation completes and results are reported, the validation worker cleans up and closes immediately.
 
 ### Step 2: Coordinator Bug Triage — Fix on the Spot vs. Send Back to Sub-Agent
 
@@ -280,6 +295,10 @@ Trigger this workflow whenever the user says:
      ```
 
 3. **Validate Completed Tasks**:
+   - **Validation Delegation Discipline**:
+     - Unless the test/validation is **super easy and straightforward** (e.g., running a single unit test file or inspecting a trivial fix), the Coordinator does **not** perform validation itself.
+     - The Coordinator dispatches a lower-intelligence validation worker (for now, **Gemini latest Flash model with low/medium effort**: `--agent antigravity --model flash --effort low|medium` or `--agent gemini --model gemini-2.5-flash`) to run the checks, assemble/install APKs, execute on-device smoke tests, and inspect logs.
+     - Once the validation worker finishes and reports back, it **cleans up and closes immediately** (no keep-alive grace period).
    - **Mobile Tasks**:
      - Run tests under lock:
        ```bash
@@ -341,35 +360,55 @@ Trigger this workflow whenever the user says:
      ```
 
 6. **Sub-Agent Keep-Alive Window & Automatic Cleanup (AGENTS.md Rule 9)**:
-   - **Post-Submission Keep-Alive**:
-     - Do NOT terminate the sub-agent or remove its worktree immediately upon merge.
-     - Keep the sub-agent alive for **20 minutes in Manual Mode** or **10 minutes in Auto Mode** for any potential follow-up changes.
+   - **Feature Implementation Workers**:
+     - **Post-Submission Keep-Alive**: Do NOT terminate feature sub-agents or remove their worktrees immediately upon merge.
+     - Keep feature sub-agents alive for **20 minutes in Manual Mode** or **10 minutes in Auto Mode** for any potential follow-up changes.
      - **Forward User Feedback**: If the user provides feedback on that specific work while the sub-agent is still alive, forward the feedback directly back to that sub-agent (`orca orchestration worker-send --dispatch <id> ...` or harness input) for immediate iteration.
-   - **Teardown after Keep-Alive Expiration**:
-     - Once the 20-min (Manual) or 10-min (Auto) keep-alive window expires with no further user feedback:
-       - Release any claimed test device lock back to the pool:
-         ```bash
-         bash "$SKILL_ROOT/state-droid-remote-device/scripts/device-pool.sh" release --owner "<subagent-name>"
-         ```
-       - Release dispatch:
-         ```bash
-         orca orchestration worker-release --dispatch <id>
-         ```
-       - Close terminal:
-         ```bash
-         orca terminal close --terminal <handle> --tab
-         ```
-       - Terminate orphaned background processes in the worker's worktree directory.
-       - Remove worktree & branch:
-         ```bash
-         wt remove <branch>
-         ```
-       - Verify complete cleanup:
-         ```bash
-         wt list
-         git worktree list
-         bash "$SKILL_ROOT/state-droid-remote-device/scripts/device-pool.sh" list
-         ```
+     - **Teardown after Keep-Alive Expiration**:
+       - Once the 20-min (Manual) or 10-min (Auto) keep-alive window expires with no further user feedback:
+         - Release any claimed test device lock back to the pool:
+           ```bash
+           bash "$SKILL_ROOT/state-droid-remote-device/scripts/device-pool.sh" release --owner "<subagent-name>"
+           ```
+         - Release dispatch:
+           ```bash
+           orca orchestration worker-release --dispatch <id>
+           ```
+         - Close terminal:
+           ```bash
+           orca terminal close --terminal <handle> --tab
+           ```
+         - Terminate orphaned background processes in the worker's worktree directory.
+         - Remove worktree & branch:
+           ```bash
+           wt remove <branch>
+           ```
+   - **Test & Validation Sub-Agents (Immediate Teardown)**:
+     - **No Keep-Alive Window**: Validation sub-agents do not create code or wait for user feedback.
+     - As soon as validation is executed, logs/screenshots collected, and the verification report returned to the Coordinator, the validation sub-agent must **immediately clean up and close**:
+       1. Release any claimed device lock back to the pool:
+          ```bash
+          bash "$SKILL_ROOT/state-droid-remote-device/scripts/device-pool.sh" release --owner "<validation-agent-name>"
+          ```
+       2. Release dispatch:
+          ```bash
+          orca orchestration worker-release --dispatch <id>
+          ```
+       3. Close terminal:
+          ```bash
+          orca terminal close --terminal <handle> --tab
+          ```
+       4. Terminate orphaned background processes in its worktree directory.
+       5. Remove worktree & branch:
+          ```bash
+          wt remove <branch>
+          ```
+   - **Verify Complete Cleanup**:
+     ```bash
+     wt list
+     git worktree list
+     bash "$SKILL_ROOT/state-droid-remote-device/scripts/device-pool.sh" list
+     ```
 
 7. **Document & Suggest Next**:
    - Update `openspec/changes/.../tasks.md` with implementation notes.
