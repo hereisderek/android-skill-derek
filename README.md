@@ -6,7 +6,6 @@ Modular repository of general, reusable agent skills, universal agent rules, and
 
 ```text
 agent-skills/
-├── SKILL.md                                           # Root router & skill catalog
 ├── README.md                                          # Documentation & installation guides
 ├── rules/                                             # Universal agent operational rules
 │   ├── agents-md.md

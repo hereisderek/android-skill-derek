@@ -1,6 +1,7 @@
 ---
 name: worktree-workflow
-description: Derek's standard workflow for feature, fix, and refactor work in a git repo with Worktrunk (`wt`): start in a new worktree on a new branch, work and commit there, then finish through a pull request or a local `wt merge`, and when merging to the default branch is allowed. Also covers what is automated (agent plugins, project hooks as a local CI gate) and how to turn it on. Use when starting any change that gets its own branch, when asked to create or switch worktrees, when finishing or merging such work, or when setting up worktree automation. Not for read-only investigation or small edits the user wants applied in place.
+description: >-
+  Derek's standard workflow for feature, fix, and refactor work in a git repo with Worktrunk (`wt`): start in a new worktree on a new branch, work and commit there, then finish through a pull request or a local `wt merge`, and when merging to the default branch is allowed. Also covers what is automated (agent plugins, project hooks as a local CI gate) and how to turn it on. Use when starting any change that gets its own branch, when asked to create or switch worktrees, when finishing or merging such work, or when setting up worktree automation. Not for read-only investigation or small edits the user wants applied in place.
 ---
 
 # Feature worktree workflow (Worktrunk)
