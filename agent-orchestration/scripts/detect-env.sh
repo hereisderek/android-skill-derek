@@ -4,7 +4,7 @@
 
 set -euo pipefail
 
-CONFIG_DIR="${HOME}/.config/android-skill-derek"
+CONFIG_DIR="${AGENT_ORCHESTRATION_CONFIG_DIR:-${HOME}/.config/agent-orchestration}"
 CONFIG_FILE="${CONFIG_DIR}/config.json"
 mkdir -p "${CONFIG_DIR}/memory"
 

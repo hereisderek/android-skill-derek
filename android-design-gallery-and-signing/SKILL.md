@@ -35,7 +35,7 @@ Every screen must be edge-to-edge (`enableEdgeToEdge()`) and explicitly handle s
 - **Bottom Navigation Bar**: Apply `WindowInsets.navigationBars` / `imePadding()` to bottom bars, sticky CTAs, FABs, and scrolling list `contentPadding` so neither 3-button navigation nor the gesture navigation bar overlaps bottom content.
 - **Multi-Screen, Resolution & Density Checks**:
   - Use flexible layouts (`Modifier.weight`, `FlowRow`, `BoxWithConstraints`, adaptive `WindowWidthSizeClass`) and avoid fixed pixel/dp widths or single-line text without `maxLines` + `TextOverflow.Ellipsis`.
-  - Verify on device across multiple screen sizes, resolutions, densities (`wm size`, `wm density`), and font scales (`font_scale 1.3`) using `$SKILL_ROOT/state-droid-remote-device/scripts/device-ui-audit.sh`.
+  - Verify on device across multiple screen sizes, resolutions, densities (`wm size`, `wm density`), and font scales (`font_scale 1.3`) to ensure no clipping occurs.
 
 ### 1.3 Latest Material Design Animation & Motion Standards
 
@@ -64,13 +64,20 @@ For apps that are cross-platform (Kotlin Multiplatform / Compose Multiplatform, 
 
 Every Android app must include an in-app **Component Gallery** (accessible via a debug navigation route, developer drawer/menu, or dedicated debug `Activity` like `.debug.ComponentGalleryActivity`):
 
-1. **Showcase Every Shared Component**: Render buttons, cards, input fields, chips, dialogs, top/bottom bars, badges, loading skeletons, and empty/error states in a single scrollable/tabbed catalog.
-2. **Live Theme & State Controls**:
-   - Provide an in-gallery selector for the real theme modes the app supports: at minimum **System**, **Light**, **Dark**, and **Dynamic Color** where the device/API supports it. Also expose any product color schemes (for example brand, expressive, high-contrast, or accessibility variants); do not reduce the gallery to a Light/Dark binary.
-   - Model the selection as a theme configuration (mode, color scheme, and dynamic-color capability), then pass it to the app's real theme. The gallery must visibly distinguish an unavailable dynamic-color option from an active one.
-   - Provide component-state controls for Default, Loading, Disabled, Error, and Long-Text Overflow so developers and the Coordinator can inspect tokens and states on a live device.
-3. **Register New Shared Components Immediately**: Whenever a sub-agent creates or updates a shared component in `core:designsystem` or `core:ui`, it must add a showcase card for that component to the Component Gallery before marking its task done.
-4. See `./assets/ComponentGalleryTemplate.kt` for a ready-to-adapt Compose implementation.
+1. **Subtle but Obvious Dev Build Entry Point**:
+   - In dev/debug builds (`isDebuggable` or `BuildConfig.DEBUG`), provide an entry point into the Component Gallery directly within the running app.
+   - **Subtle, Not Distracting**: The entry point must be subtle yet discoverable (for example, a small, low-contrast floating badge/dot in a screen corner, a subtle developer drawer item, or a discrete action icon). It must **never break the overall design**, obstruct interactive content, or appear in production/release builds.
+2. **Showcase Every Shared Component**: Render buttons, cards, input fields, chips, dialogs, top/bottom bars, badges, loading skeletons, and empty/error states in a single scrollable/tabbed catalog.
+3. **Interactive Color Theme Showcase with Live Gallery Theme Update**:
+   - Provide an in-gallery interactive section showcasing all supported color themes: **System**, **Light**, **Dark**, and **Material You Expressive Design Dynamic Colour** (`dynamicLightColorScheme` / `dynamicDarkColorScheme` on supported Android versions). Also expose custom product brand color schemes or accessibility variants.
+   - **Real-Time Gallery Re-Theming**: Toggling a theme in this section must **immediately update the active theme of the Component Gallery itself in real time**, so developers can inspect how every gallery component renders under that exact palette.
+   - The gallery must visibly indicate whether dynamic color is actively applied or falling back to baseline tokens.
+4. **Interactive Component State Controls**:
+   - Provide state toggles for Default, Loading, Disabled, Error, and Long-Text Overflow so developers and the Coordinator can inspect tokens and states on a live device.
+5. **Gesture-Driven Animations**:
+   - Any gallery demo involving gesture-driven interactions (collapsing headers, bottom sheets, carousels, swipe actions, pull-to-refresh) must follow [interaction-driven-animation](file:///Volumes/private/workspace/my-skills/android-skill-derek/interaction-driven-animation/SKILL.md) (1:1 finger tracking, momentum fling on release, zero jump on touch interrupt).
+6. **Register New Shared Components Immediately**: Whenever a sub-agent creates or updates a shared component in `core:designsystem` or `core:ui`, it must add a showcase card for that component to the Component Gallery before marking its task done.
+7. See `./assets/ComponentGalleryTemplate.kt` for a ready-to-adapt Compose implementation.
 
 ## 3. Deterministic Dummy & Seed Data for Development
 

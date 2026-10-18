@@ -228,3 +228,40 @@ private fun GallerySection(
         }
     }
 }
+
+/**
+ * Subtle but obvious entry point for dev/debug builds.
+ * Renders an unobtrusive, low-contrast floating trigger in a corner that never breaks or
+ * obstructs the production UI design. Wrap your root app scaffold in this when in DEBUG mode.
+ */
+@Composable
+fun DevGalleryEntryOverlay(
+    isDevBuild: Boolean, // e.g. BuildConfig.DEBUG
+    onOpenGallery: () -> Unit,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    androidx.compose.foundation.layout.Box(modifier = modifier.fillMaxSize()) {
+        content()
+        if (isDevBuild) {
+            Surface(
+                onClick = onOpenGallery,
+                shape = androidx.compose.foundation.shape.CircleShape,
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.75f),
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                tonalElevation = 1.dp,
+                modifier = Modifier
+                    .padding(WindowInsets.statusBars.asPaddingValues())
+                    .padding(top = 4.dp, end = 8.dp)
+                    .align(androidx.compose.ui.Alignment.TopEnd)
+            ) {
+                Text(
+                    text = "⚙ Gallery",
+                    style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                )
+            }
+        }
+    }
+}
+
