@@ -54,6 +54,7 @@ You are the **`<FEATURE_OR_BRANCH_NAME>`** sub-agent operating in worktree `<WOR
 - Run the relevant checks and record the exact commands and results.
 - **Mandatory 4-Part Handoff Summary**:
   Your completion report and handoff message must explicitly provide the details the Coordinator presents to the user before testing:
+  - **Scope & Intent**: Identify whether the delivery is a feature, bug fix, refactor, maintenance change, or investigation; explain why it was needed, the affected area, and material boundaries or non-goals.
   1. **What was changed**: List modified files, UI components, screens, APIs, routes, or schema migrations.
   2. **Expected behavior**: Explain intended user flows, UI appearance, animation transitions, and state behavior.
   3. **What to test for**: Specific test steps, edge cases, and verification checkpoints to test.

@@ -1,6 +1,6 @@
 # Mobile Orchestration Verification Preset
 
-Drop-in verification commands and lifecycle hooks for [`multi-agent-orchestration`](file:///Volumes/private/workspace/my-skills/android-skill-derek/multi-agent-orchestration/SKILL.md) when coordinating Android and Kotlin Multiplatform projects.
+Drop-in verification commands and lifecycle hooks for [`multi-agent-orchestration`](../multi-agent-orchestration/SKILL.md) when coordinating Android and Kotlin Multiplatform projects.
 
 ---
 

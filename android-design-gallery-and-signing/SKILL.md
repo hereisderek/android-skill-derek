@@ -75,7 +75,7 @@ Every Android app must include an in-app **Component Gallery** (accessible via a
 4. **Interactive Component State Controls**:
    - Provide state toggles for Default, Loading, Disabled, Error, and Long-Text Overflow so developers and the Coordinator can inspect tokens and states on a live device.
 5. **Gesture-Driven Animations**:
-   - Any gallery demo involving gesture-driven interactions (collapsing headers, bottom sheets, carousels, swipe actions, pull-to-refresh) must follow [interaction-driven-animation](file:///Volumes/private/workspace/my-skills/android-skill-derek/interaction-driven-animation/SKILL.md) (1:1 finger tracking, momentum fling on release, zero jump on touch interrupt).
+   - Any gallery demo involving gesture-driven interactions (collapsing headers, bottom sheets, carousels, swipe actions, pull-to-refresh) must follow [interaction-driven-animation](../interaction-driven-animation/SKILL.md) (1:1 finger tracking, momentum fling on release, zero jump on touch interrupt).
 6. **Register New Shared Components Immediately**: Whenever a sub-agent creates or updates a shared component in `core:designsystem` or `core:ui`, it must add a showcase card for that component to the Component Gallery before marking its task done.
 7. See `./assets/ComponentGalleryTemplate.kt` for a ready-to-adapt Compose implementation.
 

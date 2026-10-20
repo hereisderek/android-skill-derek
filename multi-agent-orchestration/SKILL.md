@@ -179,10 +179,17 @@ Before a worker hands off a deliverable, it must make the current branch ready f
   - In **Auto Mode**, deploy and prepare reproducible entry points for automated validation.
 - **Pre-Review 4-Part Summary**:
   The worker's handoff message must provide the exact details the Coordinator displays to the user:
+  - **Scope & Intent**: Briefly identify whether the delivery is a feature, bug fix, refactor, maintenance change, or investigation; explain the reason for the change, the affected area, and material boundaries or non-goals. This gives the Coordinator and testers the context needed to test the change thoroughly.
   1. **What was changed**: Modified files, UI components, screens, APIs, endpoints, or DB schemas.
   2. **Expected behavior**: Intended user flow, UI states (populated, empty, loading, error), animation transitions, and behavior.
   3. **What to test for**: Specific test steps, edge cases, and verification checkpoints.
   4. **Credentials & Test Prerequisites**: Any credentials, test accounts, mock tokens, API keys, accessible preview links/ports, or test device serials needed.
+- **Validation & Return Sequence**:
+  1. The Coordinator reviews the scope packet and selects a suitable independent validation agent/model using the pre-dispatch inventory and quota-aware routing policy. It forwards the scope, four-part summary, relevant repository-root-relative file paths, and concrete validation instructions to that test worker.
+  2. The test worker runs the assigned checks and returns the commands, results, evidence, and any remaining risks. If validation passes, release and close the test worker and remove its validation worktree; if it fails, return the evidence to the original worker for remediation.
+  3. After a passing validation result, the original worker sends the Coordinator the final scope-and-intent briefing, reason for the edit, and four-part summary for any required user manual validation.
+  4. Once all required validation and user approval gates pass, the original worker commits the approved changes and, with authorization, pushes its original branch and opens a pull request. Merge the pull request only with the required merge authorization.
+  5. After the pull request merges successfully, release stale workers and clean up merged worktrees using `wt remove <branch>` when Worktrunk is available, otherwise the applicable Git worktree cleanup flow.
 - **Keep-Alive Readiness**:
   - Feature sub-agents remain alive post-submission (**20 minutes in Manual Mode**, **10 minutes in Auto Mode**) to receive and apply any forwarded user feedback.
 

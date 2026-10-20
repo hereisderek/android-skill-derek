@@ -21,9 +21,9 @@ Master playbook and router for modern Android and Kotlin Multiplatform (KMP) eng
 
 | Module | Location | Description |
 | --- | --- | --- |
-| **Design, Gallery & Signing** | [`android-design-gallery-and-signing`](file:///Volumes/private/workspace/my-skills/android-skill-derek/android-design-gallery-and-signing/SKILL.md) | Material Design 3, window insets, subtle dev-build Component Gallery with live theme updating, Material You Expressive dynamic colour, deterministic dummy data, and debug/release keystores |
-| **Interaction-Driven Motion** | [`interaction-driven-animation`](file:///Volumes/private/workspace/my-skills/android-skill-derek/interaction-driven-animation/SKILL.md) | 1:1 user touch tracking, momentum fling/spring on release, and instant halting without jump on touch interruption |
-| **Architecture Router** | [`philipp-android-skills`](file:///Volumes/private/workspace/my-skills/android-skill-derek/philipp-android-skills/SKILL.md) | Opinionated KMP & Android architecture across 9 modular guides |
+| **Design, Gallery & Signing** | [`android-design-gallery-and-signing`](../android-design-gallery-and-signing/SKILL.md) | Material Design 3, window insets, subtle dev-build Component Gallery with live theme updating, Material You Expressive dynamic colour, deterministic dummy data, and debug/release keystores |
+| **Interaction-Driven Motion** | [`interaction-driven-animation`](../interaction-driven-animation/SKILL.md) | 1:1 user touch tracking, momentum fling/spring on release, and instant halting without jump on touch interruption |
+| **Architecture Router** | [`philipp-android-skills`](../philipp-android-skills/SKILL.md) | Opinionated KMP & Android architecture across 9 modular guides |
 | **Module Structure** | `philipp-android-skills/android-module-structure` | Feature-layered modularization, version catalogs, and Gradle conventions |
 | **MVI Presentation** | `philipp-android-skills/android-presentation-mvi` | Single State, sealed Action, Channel Event, Root/Screen composables, SavedStateHandle |
 | **Navigation Compose** | `philipp-android-skills/android-navigation` | Type-safe Navigation Compose with `@Serializable` routes and per-feature nav graphs |
@@ -33,7 +33,7 @@ Master playbook and router for modern Android and Kotlin Multiplatform (KMP) eng
 | **Compose Components** | `philipp-android-skills/android-compose-components` | Reusable extracted composables, IconButton wrapping, relative sizing, preview matrix |
 | **Unit Testing** | `philipp-android-skills/android-unit-testing` | JUnit 5 + AssertK + Turbine + fake repositories |
 | **PR Quiz** | `philipp-android-skills/pr-quiz` | Interactive reviewer quizzes for GitHub pull requests |
-| **Orchestration Preset** | [`mobile-orchestration-preset.md`](file:///Volumes/private/workspace/my-skills/android-skill-derek/android/mobile-orchestration-preset.md) | Pluggable verification commands for `multi-agent-orchestration` |
+| **Orchestration Preset** | [`mobile-orchestration-preset.md`](mobile-orchestration-preset.md) | Pluggable verification commands for `multi-agent-orchestration` |
 
 ---
 
