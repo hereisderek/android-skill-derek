@@ -57,7 +57,29 @@ The Coordinator operates under one of two operating modes governing validation, 
 
 > **Precedence Rule**: The following model routing rules are only suitable when the respective models are available. **A direct instruction from the user strictly takes precedence over this default routing.**
 
-#### 2.1.1 Model Selection by Task Complexity
+#### 2.1.1 Pre-Dispatch Agent, Model & Quota Inventory
+
+Before dispatching any worker, the Coordinator must collect the best available current view of:
+
+- Each available agent and its supported models, including whether each can accept work now and any active-task or device constraints.
+- Remaining usage or quota and reset time for every candidate model, when the host exposes that information through its native status, usage, CLI, or API surface.
+- The user's explicit agent/model preference and any saved project preference.
+
+Record unavailable quota data as **unknown**, not as unlimited capacity. Refresh the inventory when a worker reports quota exhaustion, an availability change, or before starting a new dispatch wave. Do not spend scarce quota merely to probe usage state.
+
+#### 2.1.2 Quota-Aware Assignment Policy
+
+For each task, select the most appropriate available agent and model using this order:
+
+1. Honor an explicit user choice. If it cannot run, explain the constraint and choose the closest suitable available alternative.
+2. Match the task's complexity, risk, design sensitivity, and required tools to a capable model.
+3. Prefer capacity that is usable now. For work that can finish before an imminent reset, favor an appropriate model with remaining quota that would otherwise expire soon.
+4. Preserve scarce, high-capability capacity with a distant reset for tasks that genuinely need it; route routine work to suitable lower-cost or more plentiful models.
+5. Balance the active worker load so a single model's quota is not exhausted while compatible capacity elsewhere remains unused.
+
+Quota and reset data guide scheduling; they do not justify assigning an incapable model, delaying urgent work solely for a reset, or dispatching unnecessary work. When quota data is unknown, use the capability routing below and update the inventory from observed outcomes.
+
+#### 2.1.3 Model Selection by Task Complexity
 - **Harder Tasks & Design Tasks**:
   - Use **Claude** (`--agent claude` or Antigravity's Claude model) for high-complexity engineering challenges, complex algorithms/concurrency, and **any task relating to design** (UI/UX layouts, design tokens, design systems, and visual fidelity).
   - **Antigravity Claude**: Antigravity also has a small allocation of Claude models; use it when suitable for harder tasks or design work.
@@ -69,7 +91,7 @@ The Coordinator operates under one of two operating modes governing validation, 
   - **Do NOT use high effort** (`--effort high` is strictly avoided).
   - Default to `--effort medium` for standard or complex tasks, and `--effort low` for fast, lightweight tasks.
 
-#### 2.1.2 Quota Depletion ("Dry") & Automatic Model Switching
+#### 2.1.4 Quota Depletion ("Dry") & Automatic Model Switching
 - **Report Quota Dry**: When a model's usage/quota runs dry (rate limited, 429 quota exhaustion, capacity limit, or token budget exhausted), the sub-agent or Coordinator must report the exhaustion immediately (e.g., `[QUOTA_DRY] Model <model_name> usage dry`).
 - **Automatic Fallback Switching**: The Coordinator must **automatically switch to the next suitable and available model** in the fallback chain without stalling work:
   - **Fallback Chain for Harder / Design Tasks**:
@@ -82,7 +104,7 @@ The Coordinator operates under one of two operating modes governing validation, 
     2. Secondary: Antigravity Flash Lite (`--agent antigravity --model flash_lite`)
     3. Fallback: Antigravity Argon (`--agent antigravity --model argon --effort low`) or standard lightweight model
 
-#### 2.1.3 Validation Agent Delegation & Immediate Teardown Discipline
+#### 2.1.5 Validation Agent Delegation & Immediate Teardown Discipline
 - **Coordinator Does Not Validate Directly**: Unless the test or validation task is **super easy and straightforward** (such as running a single trivial unit test or verifying a 1-line typo fix), the Coordinator does **not** perform validation itself.
 - **Lower-Intelligence Validation Agent**: The Coordinator dispatches a lower-intelligence agent to run the validation, execute test suites, perform on-device play-testing/audits, verify logs/screenshots, and report back:
   - **Model Specification**: Currently use **Gemini latest Flash model with low/medium effort** (`--agent antigravity --model flash --effort low` or `--effort medium`, or `--agent gemini --model gemini-2.5-flash`).
@@ -99,7 +121,7 @@ The Coordinator operates under one of two operating modes governing validation, 
 
 Every delegated task has a bounded, two-way estimate. Keep only super easy, straightforward validation or localized trivial fixes with the Coordinator; delegate all other validation (to Gemini Flash) and feature development (to suitable feature agents) to sub-agents.
 
-1. **Coordinator dispatch**: state the requested outcome, the expected time range, a checkpoint cadence for work exceeding 30 minutes, and the handoff requirements below.
+1. **Coordinator dispatch**: refresh the pre-dispatch agent, model, and quota inventory; then state the requested outcome, selected agent/model and rationale, expected time range, checkpoint cadence for work exceeding 30 minutes, and the handoff requirements below.
 2. **Worker assessment before implementation**: inspect the task and reply to the Coordinator with its own estimate, assumptions, milestones, and any likely blocker *before* changing code. It must revise that estimate promptly if scope changes.
 3. **Coordinator follow-up**: at the worker's estimate plus a reasonable leeway (normally 25%, at least 10 minutes), request a concise status update. Ask earlier if the task misses a stated milestone or its resource lease is blocking another worker. Do not let a worker silently run indefinitely.
 4. **Stuck work**: after two missed updates, a repeated blocker, or an estimate materially exceeded without a recovery plan, pause or redirect the task, preserve its worktree/logs, and decide whether to narrow, reassign, or finish the smallest safe part directly.
