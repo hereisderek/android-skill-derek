@@ -13,7 +13,7 @@ Master playbook and router for modern Android and Kotlin Multiplatform (KMP) eng
 - Designing with Material Design 3, building subtle in-app Component Galleries with real-time theme updates and Material You Expressive dynamic colour, and managing safe signing keys
 - Implementing gesture-triggered animations (collapsing headers, bottom sheets, carousels, swipe actions, pull-to-refresh) following `interaction-driven-animation`
 - Building with Philipp Lackner's architecture conventions (MVI presentation, type-safe Navigation Compose, Koin DI, offline-first Room/Ktor data layer, typed Result error handling, unit testing with JUnit 5 + AssertK + Turbine, and PR quizzes)
-- Integrating mobile-specific verification commands (`flock /tmp/dtm-gradle.lock`, APK assemble, device smoke testing) with `agent-orchestration`
+- Integrating mobile-specific verification commands (`flock /tmp/dtm-gradle.lock`, APK assemble, device smoke testing) with `dereks-agentic-skills`
 
 ---
 
@@ -33,7 +33,7 @@ Master playbook and router for modern Android and Kotlin Multiplatform (KMP) eng
 | **Compose Components** | `philipp-android-skills/android-compose-components` | Reusable extracted composables, IconButton wrapping, relative sizing, preview matrix |
 | **Unit Testing** | `philipp-android-skills/android-unit-testing` | JUnit 5 + AssertK + Turbine + fake repositories |
 | **PR Quiz** | `philipp-android-skills/pr-quiz` | Interactive reviewer quizzes for GitHub pull requests |
-| **Orchestration Preset** | [`mobile-orchestration-preset.md`](file:///Volumes/private/workspace/my-skills/android-skill-derek/android/mobile-orchestration-preset.md) | Pluggable verification commands for `agent-orchestration` |
+| **Orchestration Preset** | [`mobile-orchestration-preset.md`](file:///Volumes/private/workspace/my-skills/android-skill-derek/android/mobile-orchestration-preset.md) | Pluggable verification commands for `dereks-agentic-skills` |
 
 ---
 

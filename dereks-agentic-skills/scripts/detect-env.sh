@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Probe installed orchestration harnesses, sub-agent CLIs, spec tools, memory daemons,
-# and Android device tools, merging with user preferences in ~/.config/android-skill-derek/config.json.
+# and Android device tools, merging with user preferences in ~/.config/dereks-agentic-skills/config.json.
 
 set -euo pipefail
 
-CONFIG_DIR="${AGENT_ORCHESTRATION_CONFIG_DIR:-${HOME}/.config/agent-orchestration}"
+CONFIG_DIR="${DEREKS_AGENTIC_SKILLS_CONFIG_DIR:-${AGENT_ORCHESTRATION_CONFIG_DIR:-${HOME}/.config/dereks-agentic-skills}}"
 CONFIG_FILE="${CONFIG_DIR}/config.json"
 mkdir -p "${CONFIG_DIR}/memory"
 

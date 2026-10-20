@@ -16,7 +16,7 @@ agent-skills/
 │   ├── safe-commands.md
 │   ├── testing-policy.md
 │   └── worktrunk.md
-├── agent-orchestration/                               # Universal multi-agent coordination protocol
+├── dereks-agentic-skills/                             # Derek's multi-agent engineering workflow
 │   ├── SKILL.md                                       # Coordinator vs. Worker, Manual/Auto modes, validation delegation
 │   ├── scripts/detect-env.sh                          # Probes Orca, sub-agents, OpenSpec & AgentMemory
 │   └── assets/worker-task-template.md                 # 7-Point Worker Task-Spec preamble template
@@ -57,8 +57,8 @@ npx skills add hereisderek/android-skill-derek -g -y
 
 ### Install Individual Skills
 ```bash
-# Universal multi-agent orchestration
-npx skills add hereisderek/android-skill-derek -g --skill agent-orchestration -y
+# Derek's agentic workflow
+npx skills add hereisderek/android-skill-derek -g --skill dereks-agentic-skills -y
 
 # Gesture-driven animations
 npx skills add hereisderek/android-skill-derek -g --skill interaction-driven-animation -y

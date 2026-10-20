@@ -1,11 +1,11 @@
 ---
-name: agent-orchestration
-description: Universal multi-agent coordination protocol for parallel sub-agents across isolated git worktrees. Covers Manual vs. Automatic modes, pre-review change reporting, wait policies (one-time wait per delivered job, idle on completion), timeboxed dispatch with two-way estimates, feature worker keep-alive grace periods, quota & model selection routing (Claude, Flash, Argon/Sonnet), bug triage (fix on the spot vs. send back), validation agent delegation discipline (delegating validation to lower-intelligence Gemini Flash agents), immediate validation agent teardown, pluggable validation hooks, and the Coordinator Cycle Workflow (sweep, check progress and merge, run the cycle, /cycle).
+name: dereks-agentic-skills
+description: Derek's multi-agent engineering workflow for parallel sub-agents in isolated git worktrees. Covers manual and automatic modes, review reporting, timeboxed dispatch, worker keep-alive, model routing, validation delegation, lifecycle cleanup, and the Coordinator Cycle Workflow. Integrates with Orca, OpenSpec, AgentMemory, and native CLI sub-agents.
 ---
 
-# Universal Agent Orchestration (`agent-orchestration`)
+# Derek's Agentic Skills (`dereks-agentic-skills`)
 
-Coordinate complex multi-agent engineering workflows across parallel sub-agents operating in isolated git worktrees without branch collisions, resource contention, or unverified merges. This skill defines a **framework- and platform-agnostic orchestration protocol** with pluggable verification hooks, compatible with **Orca**, **OpenSpec**, **AgentMemory**, and native CLI sub-agents.
+Coordinate Derek's multi-agent engineering workflows across parallel sub-agents operating in isolated git worktrees without branch collisions, resource contention, or unverified merges. This skill defines an orchestration protocol with pluggable verification hooks, compatible with **Orca**, **OpenSpec**, **AgentMemory**, and native CLI sub-agents.
 
 ## When to Use
 
@@ -290,7 +290,7 @@ Trigger this workflow whenever the user says:
 
 ## Directory Layout
 
-- `SKILL.md`: Universal orchestration protocol, sub-agent naming, keep-alive windows, validation delegation, and cleanup
+- `SKILL.md`: Derek's multi-agent workflow, sub-agent naming, keep-alive windows, validation delegation, and cleanup
 - `scripts/detect-env.sh`: Probes installed harnesses (`orca`, etc.), sub-agent CLIs, spec tools, and memory services
 - `assets/worker-task-template.md`: Universal 7-Point Worker Task-Spec preamble template
-- `assets/config.example.json`: Example `~/.config/agent-orchestration/config.json`
+- `assets/config.example.json`: Example `~/.config/dereks-agentic-skills/config.json`
