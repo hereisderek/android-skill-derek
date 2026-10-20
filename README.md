@@ -6,6 +6,7 @@ Modular repository of general, reusable agent skills, universal agent rules, and
 
 ```text
 agent-skills/
+├── SKILL.md                                          # Root router for the full collection
 ├── README.md                                          # Documentation & installation guides
 ├── rules/                                             # Universal agent operational rules
 │   ├── agents-md.md
@@ -16,7 +17,7 @@ agent-skills/
 │   ├── safe-commands.md
 │   ├── testing-policy.md
 │   └── worktrunk.md
-├── dereks-agentic-skills/                             # Derek's multi-agent engineering workflow
+├── multi-agent-orchestration/                         # Multi-agent engineering workflow
 │   ├── SKILL.md                                       # Coordinator vs. Worker, Manual/Auto modes, validation delegation
 │   ├── scripts/detect-env.sh                          # Probes Orca, sub-agents, OpenSpec & AgentMemory
 │   └── assets/worker-task-template.md                 # 7-Point Worker Task-Spec preamble template
@@ -50,15 +51,17 @@ agent-skills/
 
 ## Installation
 
-### Install All Skills via `skills` CLI
+### Install the Full Collection
 ```bash
 npx skills add hereisderek/android-skill-derek -g -y
 ```
 
+This installs the root router, **Derek's Agentic Skills**, and its child skills into the agent's skills directory.
+
 ### Install Individual Skills
 ```bash
-# Derek's agentic workflow
-npx skills add hereisderek/android-skill-derek -g --skill dereks-agentic-skills -y
+# Multi-agent orchestration
+npx skills add hereisderek/android-skill-derek -g --skill multi-agent-orchestration -y
 
 # Gesture-driven animations
 npx skills add hereisderek/android-skill-derek -g --skill interaction-driven-animation -y
