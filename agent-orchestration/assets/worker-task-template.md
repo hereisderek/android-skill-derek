@@ -18,6 +18,7 @@ You are the **`<FEATURE_OR_BRANCH_NAME>`** sub-agent operating in worktree `<WOR
 - **Specification & Design Files to Read First**:
   - `<SPEC_FILES>` (e.g., `docs/SPEC.md`, `docs/features/<feature>.md`, `design/DESIGN_SYSTEM.md`)
   - Shared architectural digest: `<MEMORY_SOURCE>` (query `memory_smart_search` in AgentMemory or read `<ARCHITECTURAL_DIGEST_PATH>`)
+  - **Remote headless Orca workers**: name every repository file with its path relative to the repository root (for example, `docs/SPEC.md`), never an absolute Coordinator-host path or an ambiguous relative path.
 
 ### 2. Change (Deliverables, Shared Components & Fixtures)
 

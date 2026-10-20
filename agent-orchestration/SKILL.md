@@ -123,6 +123,10 @@ orca orchestration worker-start \
   --prompt "<task spec>"
 ```
 
+### 2.4 Remote Headless File References
+
+When dispatching Orca workers remotely in headless mode, reference repository files with the relevant path relative to the repository root (for example, `docs/SPEC.md` or `app/src/main/...`). Do not rely on the Coordinator's absolute host paths or ambiguous working-directory-relative paths. Include the repository-root-relative path in the worker prompt, task specification, and any follow-up message that names a file.
+
 ---
 
 ## 3. Parallel Wave Planning (DAG) & Shared Resources
