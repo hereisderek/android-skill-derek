@@ -41,11 +41,11 @@ Master playbook and router for modern Android and Kotlin Multiplatform (KMP) eng
 
 - **Install as a Whole Suite**:
   ```bash
-  npx skills add hereisderek/android-skill-derek -g --skill android --full-depth -y
+  npx skills add hereisderek/derek-agent-skills -g --skill android --full-depth -y
   ```
 - **Install Individual Sub-Skills**:
   ```bash
-  npx skills add hereisderek/android-skill-derek -g --skill android-design-gallery-and-signing -y
-  npx skills add hereisderek/android-skill-derek -g --skill philipp-android-skills -y
-  npx skills add hereisderek/android-skill-derek -g --skill interaction-driven-animation -y
+  npx skills add hereisderek/derek-agent-skills -g --skill android-design-gallery-and-signing -y
+  npx skills add hereisderek/derek-agent-skills -g --skill philipp-android-skills -y
+  npx skills add hereisderek/derek-agent-skills -g --skill interaction-driven-animation -y
   ```

@@ -53,7 +53,7 @@ agent-skills/
 
 ### Install the Full Collection
 ```bash
-npx skills add hereisderek/android-skill-derek -g -y
+npx skills add hereisderek/derek-agent-skills -g -y
 ```
 
 This installs the root router, **Derek's Agentic Skills**, and its child skills into the agent's skills directory.
@@ -61,14 +61,14 @@ This installs the root router, **Derek's Agentic Skills**, and its child skills 
 ### Install Individual Skills
 ```bash
 # Multi-agent orchestration
-npx skills add hereisderek/android-skill-derek -g --skill multi-agent-orchestration -y
+npx skills add hereisderek/derek-agent-skills -g --skill multi-agent-orchestration -y
 
 # Gesture-driven animations
-npx skills add hereisderek/android-skill-derek -g --skill interaction-driven-animation -y
+npx skills add hereisderek/derek-agent-skills -g --skill interaction-driven-animation -y
 
 # Android & KMP complete suite
-npx skills add hereisderek/android-skill-derek -g --skill android --full-depth -y
+npx skills add hereisderek/derek-agent-skills -g --skill android --full-depth -y
 
 # Git worktree workflow
-npx skills add hereisderek/android-skill-derek -g --skill worktree-workflow -y
+npx skills add hereisderek/derek-agent-skills -g --skill worktree-workflow -y
 ```
