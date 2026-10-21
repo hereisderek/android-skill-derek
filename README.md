@@ -1,6 +1,6 @@
 # agent-skills (General Reusable Skills)
 
-Modular repository of general, reusable agent skills, universal agent rules, and specialized Android/KMP development workflows. Built to be completely **framework- and machine-agnostic**—installable individually or as an entire bundle via the `skills` CLI.
+Modular repository of reusable agent skills: Android/KMP development, multi-agent orchestration and gesture-driven animation. Built to be completely **framework- and machine-agnostic**—installable individually or as an entire bundle via the `skills` CLI.
 
 ## Repository Structure
 
@@ -8,15 +8,6 @@ Modular repository of general, reusable agent skills, universal agent rules, and
 agent-skills/
 ├── SKILL.md                                          # Root router for the full collection
 ├── README.md                                          # Documentation & installation guides
-├── rules/                                             # Universal agent operational rules
-│   ├── agents-md.md
-│   ├── deliverables-raw-syntax.md
-│   ├── instruction-priority.md
-│   ├── no-mannered-prose.md
-│   ├── planning-and-review.md
-│   ├── safe-commands.md
-│   ├── testing-policy.md
-│   └── worktrunk.md
 ├── multi-agent-orchestration/                         # Multi-agent engineering workflow
 │   ├── SKILL.md                                       # Coordinator vs. Worker, Manual/Auto modes, validation delegation
 │   ├── scripts/detect-env.sh                          # Probes Orca, sub-agents, OpenSpec & AgentMemory
@@ -41,22 +32,18 @@ agent-skills/
 │   ├── android-compose-components/                    # Reusable Compose UI components & design system reuse
 │   ├── android-unit-testing/                          # JUnit 5 + AssertK + Turbine + fake repositories
 │   └── pr-quiz/                                       # Interactive reviewer quizzes for GitHub pull requests
-├── worktree-workflow/                                 # Feature worktree workflow with Worktrunk (wt)
-│   └── SKILL.md
-├── release-cicd/                                      # Release tagging (v* / beta_*) & CI/CD pipeline policy
-│   └── SKILL.md
-└── markdown-converter/                                # Document-to-Markdown conversion via markitdown
-    └── SKILL.md
 ```
 
 ## Installation
 
 ### Install the Full Collection
 ```bash
-npx skills add hereisderek/derek-agent-skills -g -y
+npx skills add hereisderek/derek-agent-skills -g --full-depth -y
 ```
 
-This installs the root router, **Derek's Agentic Skills**, and its child skills into the agent's skills directory.
+`--full-depth` installs every child skill (and `philipp-android-skills`' nested skills) as its own skill, plus the root router. Without it the CLI installs only the root skill with the children nested inside.
+
+The global rules and the worktree, release and markdown skills are in [hereisderek/agent-kit](https://github.com/hereisderek/agent-kit) (`git clone` and `./install.sh`). Each skill lives in exactly one of the two repos, so installing both does not collide.
 
 ### Install Individual Skills
 ```bash
@@ -68,7 +55,4 @@ npx skills add hereisderek/derek-agent-skills -g --skill interaction-driven-anim
 
 # Android & KMP complete suite
 npx skills add hereisderek/derek-agent-skills -g --skill android --full-depth -y
-
-# Git worktree workflow
-npx skills add hereisderek/derek-agent-skills -g --skill worktree-workflow -y
 ```
